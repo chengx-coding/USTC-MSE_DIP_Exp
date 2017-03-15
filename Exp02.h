@@ -9,5 +9,10 @@
 using namespace cv;
 using namespace std;
 
-int help();
+int Exp02Help();
 int Exp02Main(char *imagePath);
+
+int CalcNormalizedHistogram(Mat img, Mat histImg, int histHight, int *pmax, int *hist, Scalar color);
+int ShowNormalizedHistogram();
+int GrayHistogramEqualization();
+int RGBHistogramEqulization();

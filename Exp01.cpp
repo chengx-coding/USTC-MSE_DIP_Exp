@@ -1,6 +1,6 @@
 #include "Exp01.h"
 
-int help()
+int Exp01Help()
 {
     cout << "Exp01 --- SA16225037 程欣" << endl;
     cout<< "1 : 显示原始图像和灰度图像\n"
@@ -13,9 +13,9 @@ int help()
 }
 
 
-Mat image;
+extern Mat image;
 //IplImage *pimage;
-Mat gray;
+extern Mat gray;
 //IplImage *pgray;
 int Exp01Main(char *imagePath)
 {
@@ -29,7 +29,7 @@ int Exp01Main(char *imagePath)
         return -1;
     }
 
-    help();
+    Exp01Help();
     while (1)
     {
         cout << "清选择要运行的程序，按h帮助，按q退出：";
@@ -61,7 +61,7 @@ int Exp01Main(char *imagePath)
                 CapThreshold();
                 break;
             case 'h':
-                help();
+                Exp01Help();
                 break;
             default:
                 cout << "无效的输入" << endl;

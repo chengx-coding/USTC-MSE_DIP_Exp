@@ -9,7 +9,7 @@
 using namespace cv;
 using namespace std;
 
-int help();
+int Exp01Help();
 int Exp01Main(char *imagePath);
 
 int ShowImg();
