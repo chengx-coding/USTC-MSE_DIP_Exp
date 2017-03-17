@@ -2,13 +2,15 @@
 
 int Exp01Help()
 {
-    cout << "Exp01 --- SA16225037 程欣" << endl;
-    cout<< "1 : 显示原始图像和灰度图像\n"
-        << "2 : 灰度图像二值化\n"
-        << "3 : 灰度图像对数变换\n"
-        << "4 : 灰度图像伽马变换\n"
-        << "5 : 彩色图像补色变换\n"
-        << "6 : 摄像头视频图像二值化\n" << endl;
+    cout << "\nExp01 --- SA16225037 程欣\n" << endl;
+    cout <<
+        "1 : 显示原始图像和灰度图像\n" <<
+        "2 : 灰度图像二值化\n" <<
+        "3 : 灰度图像对数变换\n" <<
+        "4 : 灰度图像伽马变换\n" <<
+        "5 : 彩色图像反相变换\n" <<
+        "6 : 彩色图像补色变换\n" <<
+        "7 : 摄像头视频图像二值化\n" << endl;
     return 0;
 }
 
@@ -17,11 +19,13 @@ extern Mat image;
 //IplImage *pimage;
 extern Mat gray;
 //IplImage *pgray;
+extern Mat hsv;
 int Exp01Main(char *imagePath)
 {
-    char chioce;
     image = imread(imagePath);
-    gray = imread(imagePath, IMREAD_GRAYSCALE);
+    //gray = imread(imagePath, IMREAD_GRAYSCALE);
+    cvtColor(image, gray, CV_BGR2GRAY); 
+    cvtColor(image, hsv, CV_BGR2HSV);
     //pimage = cvLoadImage("test.jpg");
     if (image.empty())
     {
@@ -30,17 +34,18 @@ int Exp01Main(char *imagePath)
     }
 
     Exp01Help();
+    char choice;
     while (1)
     {
-        cout << "清选择要运行的程序，按h帮助，按q退出：";
-        cin >> chioce;
-        if (chioce == 'q')
+        cout << "清选择要运行的程序，按h帮助，按w返回上一级，按q退出：";
+        cin >> choice;
+        if (choice == 'q')
         {
             exit(0);
         }
         else
         {
-            switch (chioce)
+            switch (choice)
             {
             case '1':
                 ShowImg();
@@ -55,14 +60,19 @@ int Exp01Main(char *imagePath)
                 GamaTrans();
                 break;
             case '5':
-                ComplementaryColorTrans();
+                InvertColorTrans();
                 break;
             case '6':
+                ComplementaryColorTrans();
+                break;
+            case '7':
                 CapThreshold();
                 break;
             case 'h':
                 Exp01Help();
                 break;
+            case 'w':
+                return 0;
             default:
                 cout << "无效的输入" << endl;
                 break;
@@ -91,7 +101,7 @@ void threshold_trackbar(int threshold_val, void *)
 
 int Binarization()
 {
-    Mat bina_image = Mat::zeros(gray.size(), gray.type());
+    Mat binaImg = Mat::zeros(gray.size(), gray.type());
     //uchar threshold_val;
     int threshold_val;
     threshold_val = 128;
@@ -108,11 +118,11 @@ int Binarization()
             for (int x = 0; x < gray.cols; x++)
             {
                 //saturate_cast<uchar>();
-                bina_image.at<uchar>(y, x) = gray.at<uchar>(y, x) >= threshold_val ? 255 : 0;
+                binaImg.at<uchar>(y, x) = gray.at<uchar>(y, x) >= threshold_val ? 255 : 0;
             }
         }
 
-        imshow("Binarization", bina_image);
+        imshow("Binarization", binaImg);
         if (waitKey(10)!=255)
         {
             destroyAllWindows();
@@ -125,19 +135,19 @@ int Binarization()
 int LogTrans()
 {
     double c = 255 / (log(1 + 255));//以e为底时的系数45.99,对应0-255的映射
-    Mat log_image = Mat::zeros(gray.size(), gray.type());
+    Mat logImg = Mat::zeros(gray.size(), gray.type());
  
     for (int y = 0; y < gray.rows; y++)
     {
         for (int x = 0; x < gray.cols; x++)
         {
-            log_image.at<uchar>(y, x) = saturate_cast<uchar>(c*log(1 + gray.at<uchar>(y, x)));
+            logImg.at<uchar>(y, x) = saturate_cast<uchar>(c*log(1 + gray.at<uchar>(y, x)));
         }
     }
     namedWindow("Gray - 灰度图像", WINDOW_AUTOSIZE);
     imshow("Gray - 灰度图像", gray);
     namedWindow("LogTrans", WINDOW_AUTOSIZE);
-    imshow("LogTrans", log_image);
+    imshow("LogTrans", logImg);
     waitKey(0);
     destroyAllWindows();
 
@@ -146,7 +156,7 @@ int LogTrans()
 
 int GamaTrans()
 {
-    Mat gama_image = Mat::zeros(gray.size(), gray.type());
+    Mat gamaImg = Mat::zeros(gray.size(), gray.type());
     //uchar threshold_val;
     double c;
     double gama, gama_pre;
@@ -162,8 +172,8 @@ int GamaTrans()
     for (;;)
     {
         gama_pre = gama;
-        gama = (double)powf(10, (double)((double)(gama_linear - max_gama_linear / 2) / (double)(max_gama_linear / 2)));
-        c = (double)255 / (powf(255, (double)gama));
+        gama = (double)pow(10, (double)((double)(gama_linear - max_gama_linear / 2) / (double)(max_gama_linear / 2)));
+        c = (double)255 / (pow(255, (double)gama));
         if (fabs(gama - gama_pre) > 0.000001)
         {
             cout << "此时指数为：" << gama << endl;
@@ -173,10 +183,10 @@ int GamaTrans()
         {
             for (int x = 0; x < gray.cols; x++)
             {
-                gama_image.at<uchar>(y, x) = saturate_cast<uchar>(c*powf(gray.at<uchar>(y, x), (double)gama));
+                gamaImg.at<uchar>(y, x) = saturate_cast<uchar>(c*pow(gray.at<uchar>(y, x), (double)gama));
             }
         }
-        imshow("GamaTrans", gama_image);
+        imshow("GamaTrans", gamaImg);
         if (waitKey(10) != 255)
         {
             destroyAllWindows();
@@ -186,22 +196,70 @@ int GamaTrans()
     return 0;
 }
 
-int ComplementaryColorTrans()
+int InvertColorTrans()
 {
-    Mat comcolor_image = Mat::zeros(image.size(), image.type());
+    Mat invertColorImg = Mat::zeros(image.size(), image.type());
     for (int y = 0; y < image.rows; y++) 
     {
         for (int x = 0; x < image.cols; x++)
         {
-            comcolor_image.at<Vec3b>(y, x)[0] = 255 - image.at<Vec3b>(y, x)[0];
-            comcolor_image.at<Vec3b>(y, x)[1] = 255 - image.at<Vec3b>(y, x)[1];
-            comcolor_image.at<Vec3b>(y, x)[2] = 255 - image.at<Vec3b>(y, x)[2];
+            invertColorImg.at<Vec3b>(y, x)[0] = 255 - image.at<Vec3b>(y, x)[0];
+            invertColorImg.at<Vec3b>(y, x)[1] = 255 - image.at<Vec3b>(y, x)[1];
+            invertColorImg.at<Vec3b>(y, x)[2] = 255 - image.at<Vec3b>(y, x)[2];
         }
     }
     namedWindow("Original - 原始图像", WINDOW_AUTOSIZE);
     imshow("Original - 原始图像", image);
-    namedWindow("Complementary Color Trans", WINDOW_AUTOSIZE);
-    imshow("Complementary Color Trans", comcolor_image);
+    namedWindow("Invert Color Trans", WINDOW_AUTOSIZE);
+    imshow("Invert Color Trans", invertColorImg);
+    waitKey(0);
+    destroyAllWindows();
+
+    return 0;
+}
+
+int ComplementaryColorTrans()
+{
+    vector<Mat> HSVchannels;
+    split(hsv, HSVchannels);
+    Mat hChannel, sChannel, vChannel;
+    hChannel = HSVchannels.at(0);
+    sChannel = HSVchannels.at(1);
+    vChannel = HSVchannels.at(2);
+
+    /* show the full color situation */
+    //Mat fullTable = 255 * Mat::ones(1, 256, CV_8U);
+    //LUT(sChannel, fullTable, sChannel);
+    //LUT(vChannel, fullTable, vChannel);
+    //HSVchannels.at(1) = sChannel;
+    //HSVchannels.at(2) = vChannel;
+
+    //Mat fullColorImage;
+    //merge(HSVchannels, fullColorImage);
+    //cvtColor(fullColorImage, fullColorImage, CV_HSV2BGR);
+    //namedWindow("Full Color Image", WINDOW_AUTOSIZE);
+    //imshow("Full Color Image", fullColorImage);
+
+    /* LUT函数快速扫描赋值 */
+    Mat complementaryColorTable = Mat::zeros(1, 256, CV_8U);//这里必须是256，不然会报中断错误
+    uchar *p = complementaryColorTable.ptr();
+    for (int i = 0; i < 180; i++)
+    {
+        p[i] = 179 - i;
+    }
+    LUT(hChannel, complementaryColorTable, hChannel);
+    
+    HSVchannels.at(0) = hChannel;
+
+    Mat complementaryColorImg;
+    merge(HSVchannels, complementaryColorImg);
+    cvtColor(complementaryColorImg, complementaryColorImg, CV_HSV2BGR);
+
+    namedWindow("Original - 原始图像", WINDOW_AUTOSIZE);
+    imshow("Original - 原始图像", image);
+    namedWindow("Complementary Color Image", WINDOW_AUTOSIZE);
+    imshow("Complementary Color Image", complementaryColorImg);
+
     waitKey(0);
     destroyAllWindows();
 

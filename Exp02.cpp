@@ -5,22 +5,25 @@ using namespace std;
 
 int Exp02Help()
 {
-    cout << "Exp01 --- SA16225037 程欣" << endl;
-    cout<< "1 : 显示归一化直方图\n"
-        << "2 : 灰度图像直方图均衡处理\n"
-        << "3 : 彩色图像直方图均衡处理\n" << endl;
+    cout << "\nExp02 --- SA16225037 程欣\n" << endl;
+    cout <<
+        "1 : 显示归一化直方图\n" <<
+        "2 : 灰度图像直方图均衡处理\n" <<
+        "3 : RGB彩色图像三通道直方图均衡处理\n" << 
+        "4 : HSV彩色图像V通道直方图均衡处理\n" << endl;
     return 0;
 }
 
 
 extern Mat image;
 extern Mat gray;
+extern Mat hsv;
 int Exp02Main(char *imagePath)
 {
-    char chioce;
     image = imread(imagePath);
     //gray = imread(imagePath, IMREAD_GRAYSCALE);
     cvtColor(image, gray, CV_BGR2GRAY);
+    cvtColor(image, hsv, CV_BGR2HSV);
     //pimage = cvLoadImage("test.jpg");
     if (image.empty())
     {
@@ -29,17 +32,18 @@ int Exp02Main(char *imagePath)
     }
 
     Exp02Help();
+    char choice;
     while (1)
     {
-        cout << "清选择要运行的程序，按h帮助，按q退出：";
-        cin >> chioce;
-        if (chioce == 'q')
+        cout << "清选择要运行的程序，按h帮助，按w返回上一级，按q退出：";
+        cin >> choice;
+        if (choice == 'q')
         {
             exit(0);
         }
         else
         {
-            switch (chioce)
+            switch (choice)
             {
             case '1':
                 ShowNormalizedHistogram();
@@ -50,9 +54,14 @@ int Exp02Main(char *imagePath)
             case '3':
                 RGBHistogramEqulization();
                 break;
+            case '4':
+                HSVHistogramEqulization();
+                break;
             case 'h':
                 Exp02Help();
                 break;
+            case 'w':
+                return 0;
             default:
                 cout << "无效的输入" << endl;
                 break;
@@ -62,10 +71,11 @@ int Exp02Main(char *imagePath)
     return 0;
 }
 
-int CalcNormalizedHistogram(Mat img, Mat histImg, int histHight, int *pmax, int *hist, Scalar color)
+int CalcNormalizedHistogram(Mat img, Mat histImg, int histHeight, int *pmax, int *hist, Scalar color)
 {
-    Mat lutTable = Mat::zeros(1, 256, CV_8U);
-    LUT(histImg, lutTable, histImg);
+    //Mat lutTable = Mat::zeros(1, 256, CV_8U);
+    //LUT(histImg, lutTable, histImg);
+    histImg = 0;
     int max = 0;
     for (int y = 0; y < img.rows; y++)
     {
@@ -80,8 +90,8 @@ int CalcNormalizedHistogram(Mat img, Mat histImg, int histHight, int *pmax, int 
     int binValue;
     for (int i=0; i < 256; ++i)
     {
-        binValue = hist[i] * histHight / max;
-        rectangle(histImg, Point(i, histHight), Point(i + 1, histHight - binValue), color);
+        binValue = hist[i] * histHeight / max;
+        rectangle(histImg, Point(i, histHeight), Point(i + 1, histHeight - binValue), color);
     }
     
     return *hist;
@@ -91,13 +101,13 @@ int ShowNormalizedHistogram()
 {
     int hist[256];
     memset(hist, 0, 256 * sizeof(int));
-    int histHight = 256;
+    int histHeight = 256;
     int max;
     int *pmax = &max;
-    Mat histImg = Mat::zeros(histHight, 256, CV_8U);
-    //Mat histImg(histHight, 256, CV_8U, Scalar(0));
+    Mat histImg = Mat::zeros(histHeight, 256, CV_8U);
+    //Mat histImg(histHeight, 256, CV_8U, Scalar(0));
 
-    CalcNormalizedHistogram(gray, histImg, histHight, pmax, hist, Scalar(255));
+    CalcNormalizedHistogram(gray, histImg, histHeight, pmax, hist, Scalar(255));
 
     namedWindow("Gray - 灰度图像", WINDOW_AUTOSIZE);
     imshow("Gray - 灰度图像", gray);
@@ -112,14 +122,14 @@ int GrayHistogramEqualization()
 {
     int hist[256];
     memset(hist, 0, 256 * sizeof(int));
-    int histHight = 256;
+    int histHeight = 256;
     int max;
     int *pmax = &max;
-    Mat histImg = Mat::zeros(histHight, 256, CV_8U);
+    Mat histImg = Mat::zeros(histHeight, 256, CV_8U);
 
-    CalcNormalizedHistogram(gray, histImg, histHight, pmax, hist, Scalar(255));
+    CalcNormalizedHistogram(gray, histImg, histHeight, pmax, hist, Scalar(255));
 
-    Mat histequ_image = Mat::zeros(gray.size(), gray.type());
+    Mat histEquImg = Mat::zeros(gray.size(), gray.type());
     double table[256];
     table[0] = (double)255 * hist[0] / (double)(gray.rows*gray.cols);
     for (int i = 1; i < 256; i++)
@@ -131,7 +141,7 @@ int GrayHistogramEqualization()
     {
         for (int x = 0; x < gray.cols; x++)
         {
-            histequ_image.at<uchar>(y, x) = saturate_cast<uchar>(table[gray.at<uchar>(y, x)]);
+            histEquImg.at<uchar>(y, x) = (int)table[gray.at<uchar>(y, x)];
         }
     }
 
@@ -140,17 +150,21 @@ int GrayHistogramEqualization()
     namedWindow("Histogram - 直方图", WINDOW_AUTOSIZE);
     imshow("Histogram - 直方图", histImg);
     namedWindow("GrayHistogramEqualization - 直方图均衡后灰度图像", WINDOW_AUTOSIZE);
-    imshow("GrayHistogramEqualization - 直方图均衡后灰度图像", histequ_image);
+    imshow("GrayHistogramEqualization - 直方图均衡后灰度图像", histEquImg);
 
-    CalcNormalizedHistogram(histequ_image, histImg, histHight, pmax, hist, Scalar(255));
+    CalcNormalizedHistogram(histEquImg, histImg, histHeight, pmax, hist, Scalar(255));
 
     namedWindow("直方图均衡后灰度图像直方图", WINDOW_AUTOSIZE);
     imshow("直方图均衡后灰度图像直方图", histImg);
 
-    Mat cv_histequ_image = Mat::zeros(gray.size(), gray.type());
-    equalizeHist(gray, cv_histequ_image);
+    Mat cv_HistEquImg = Mat::zeros(gray.size(), gray.type());
+    equalizeHist(gray, cv_HistEquImg);
     namedWindow("调用OpenCV直方图均衡化API得到的结果", WINDOW_AUTOSIZE);
-    imshow("调用OpenCV直方图均衡化API得到的结果", cv_histequ_image);
+    imshow("调用OpenCV直方图均衡化API得到的结果", cv_HistEquImg);
+    Mat cv_HistImg = Mat::zeros(histHeight, 256, CV_8U);
+    CalcNormalizedHistogram(gray, cv_HistImg, histHeight, pmax, hist, Scalar(255));
+    namedWindow("调用OpenCV直方图均衡化API得到的结果的直方图", WINDOW_AUTOSIZE);
+    imshow("调用OpenCV直方图均衡化API得到的结果的直方图", cv_HistImg);
 
     waitKey(0);
     destroyAllWindows();
@@ -161,83 +175,83 @@ int RGBHistogramEqulization()
 {
     vector<Mat> BGRchannels;
     split(image, BGRchannels);
-    Mat blue, green, red;
-    blue = BGRchannels.at(0);
-    green = BGRchannels.at(1);
-    red = BGRchannels.at(2);
+    Mat bChannel, gChannel, rChannel;
+    bChannel = BGRchannels.at(0);
+    gChannel = BGRchannels.at(1);
+    rChannel = BGRchannels.at(2);
 
-    int b_hist[256], g_hist[256], r_hist[256];
-    memset(b_hist, 0, 256 * sizeof(int));
-    memset(g_hist, 0, 256 * sizeof(int));
-    memset(r_hist, 0, 256 * sizeof(int));
-    int histHight = 256;
-    int b_max, g_max, r_max;
-    int *b_pmax = &b_max, *g_pmax = &g_max, *r_pmax = &r_max;
-    Mat b_histImg = Mat::zeros(histHight, 256, CV_8UC3);
-    Mat g_histImg = Mat::zeros(histHight, 256, CV_8UC3);
-    Mat r_histImg = Mat::zeros(histHight, 256, CV_8UC3);
+    int b_Hist[256], g_Hist[256], r_Hist[256];
+    memset(b_Hist, 0, 256 * sizeof(int));
+    memset(g_Hist, 0, 256 * sizeof(int));
+    memset(r_Hist, 0, 256 * sizeof(int));
+    int histHeight = 256;
+    int bMax, gMax, rMax;
+    int *b_pmax = &bMax, *g_pmax = &gMax, *r_pmax = &rMax;
+    Mat b_HistImg = Mat::zeros(histHeight, 256, CV_8UC3);
+    Mat g_HistImg = Mat::zeros(histHeight, 256, CV_8UC3);
+    Mat r_HistImg = Mat::zeros(histHeight, 256, CV_8UC3);
 
-    CalcNormalizedHistogram(blue, b_histImg, histHight, b_pmax, b_hist, Scalar(255, 0, 0));
-    CalcNormalizedHistogram(green, g_histImg, histHight, g_pmax, g_hist, Scalar(0, 255, 0));
-    CalcNormalizedHistogram(red, r_histImg, histHight, r_pmax, r_hist, Scalar(0, 0, 255));
+    CalcNormalizedHistogram(bChannel, b_HistImg, histHeight, b_pmax, b_Hist, Scalar(255, 0, 0));
+    CalcNormalizedHistogram(gChannel, g_HistImg, histHeight, g_pmax, g_Hist, Scalar(0, 255, 0));
+    CalcNormalizedHistogram(rChannel, r_HistImg, histHeight, r_pmax, r_Hist, Scalar(0, 0, 255));
 
-    Mat b_histequ_image = Mat::zeros(gray.size(), gray.type());
-    Mat g_histequ_image = Mat::zeros(gray.size(), gray.type());
-    Mat r_histequ_image = Mat::zeros(gray.size(), gray.type());
+    namedWindow("B channel", WINDOW_AUTOSIZE);
+    namedWindow("G channel", WINDOW_AUTOSIZE);
+    namedWindow("R channel", WINDOW_AUTOSIZE);
+    imshow("G channel", gChannel);
+    imshow("B channel", bChannel);
+    imshow("R channel", rChannel);
+
+    namedWindow("B channel histogram", WINDOW_AUTOSIZE);
+    namedWindow("G channel histogram", WINDOW_AUTOSIZE);
+    namedWindow("R channel histogram", WINDOW_AUTOSIZE);
+    imshow("B channel histogram", b_HistImg);
+    imshow("G channel histogram", g_HistImg);
+    imshow("R channel histogram", r_HistImg);
+
+    waitKey(0);
+
+    Mat b_HistEquImg = Mat::zeros(gray.size(), gray.type());
+    Mat g_HistEquImg = Mat::zeros(gray.size(), gray.type());
+    Mat r_HistEquImg = Mat::zeros(gray.size(), gray.type());
     double b_table[256], g_table[256], r_table[256];
-    b_table[0] = (double)255 * b_hist[0] / (double)(image.rows*image.cols);
-    g_table[0] = (double)255 * g_hist[0] / (double)(image.rows*image.cols);
-    r_table[0] = (double)255 * r_hist[0] / (double)(image.rows*image.cols);
+    b_table[0] = (double)255 * b_Hist[0] / (double)(image.rows*image.cols);
+    g_table[0] = (double)255 * g_Hist[0] / (double)(image.rows*image.cols);
+    r_table[0] = (double)255 * r_Hist[0] / (double)(image.rows*image.cols);
     for (int i = 1; i < 256; i++)
     {
-        b_table[i] = ((double)255 * b_hist[i] / (double)(image.rows*image.cols)) + b_table[i - 1];
-        g_table[i] = ((double)255 * g_hist[i] / (double)(image.rows*image.cols)) + g_table[i - 1];
-        r_table[i] = ((double)255 * r_hist[i] / (double)(image.rows*image.cols)) + r_table[i - 1];
+        b_table[i] = ((double)255 * b_Hist[i] / (double)(image.rows*image.cols)) + b_table[i - 1];
+        g_table[i] = ((double)255 * g_Hist[i] / (double)(image.rows*image.cols)) + g_table[i - 1];
+        r_table[i] = ((double)255 * r_Hist[i] / (double)(image.rows*image.cols)) + r_table[i - 1];
     }
 
     for (int y = 0; y < image.rows; y++)
     {
         for (int x = 0; x < image.cols; x++)
         {
-            b_histequ_image.at<uchar>(y, x) = saturate_cast<uchar>(b_table[blue.at<uchar>(y, x)]);
-            g_histequ_image.at<uchar>(y, x) = saturate_cast<uchar>(g_table[green.at<uchar>(y, x)]);
-            r_histequ_image.at<uchar>(y, x) = saturate_cast<uchar>(r_table[red.at<uchar>(y, x)]);
+            b_HistEquImg.at<uchar>(y, x) = (int)b_table[bChannel.at<uchar>(y, x)];
+            g_HistEquImg.at<uchar>(y, x) = (int)g_table[gChannel.at<uchar>(y, x)];
+            r_HistEquImg.at<uchar>(y, x) = (int)r_table[rChannel.at<uchar>(y, x)];
         }
     }
 
-    BGRchannels.at(0) = b_histequ_image;
-    BGRchannels.at(1) = g_histequ_image;
-    BGRchannels.at(2) = r_histequ_image;
-    Mat BGRhistequ_image;
-    merge(BGRchannels, BGRhistequ_image);
+    BGRchannels.at(0) = b_HistEquImg;
+    BGRchannels.at(1) = g_HistEquImg;
+    BGRchannels.at(2) = r_HistEquImg;
+    Mat BGRHistEquImg;
+    merge(BGRchannels, BGRHistEquImg);
 
-    namedWindow("Blue", WINDOW_AUTOSIZE);
-    namedWindow("Green", WINDOW_AUTOSIZE);
-    namedWindow("Red", WINDOW_AUTOSIZE);
-    imshow("Green", green);
-    imshow("Blue", blue);
-    imshow("Red", red);
+    CalcNormalizedHistogram(b_HistEquImg, b_HistImg, histHeight, b_pmax, b_Hist, Scalar(255, 0, 0));
+    CalcNormalizedHistogram(g_HistEquImg, g_HistImg, histHeight, g_pmax, g_Hist, Scalar(0, 255, 0));
+    CalcNormalizedHistogram(r_HistEquImg, r_HistImg, histHeight, r_pmax, r_Hist, Scalar(0, 0, 255));
 
-    namedWindow("B channel histogram", WINDOW_AUTOSIZE);
-    namedWindow("G channel histogram", WINDOW_AUTOSIZE);
-    namedWindow("R channel histogram", WINDOW_AUTOSIZE);
-    imshow("B channel histogram", b_histImg);
-    imshow("G channel histogram", g_histImg);
-    imshow("R channel histogram", r_histImg);
+    imshow("B channel", b_HistEquImg);
+    imshow("G channel", g_HistEquImg);
+    imshow("R channel", r_HistEquImg);
 
-    waitKey(0);
-
-    CalcNormalizedHistogram(b_histequ_image, b_histImg, histHight, b_pmax, b_hist, Scalar(255, 0, 0));
-    CalcNormalizedHistogram(g_histequ_image, g_histImg, histHight, g_pmax, g_hist, Scalar(0, 255, 0));
-    CalcNormalizedHistogram(r_histequ_image, r_histImg, histHight, r_pmax, r_hist, Scalar(0, 0, 255));
-
-    imshow("Blue", b_histequ_image);
-    imshow("Green", g_histequ_image);
-    imshow("Red", r_histequ_image);
-
-    imshow("B channel histogram", b_histImg);
-    imshow("G channel histogram", g_histImg);
-    imshow("R channel histogram", r_histImg);
+    imshow("B channel histogram", b_HistImg);
+    imshow("G channel histogram", g_HistImg);
+    imshow("R channel histogram", r_HistImg);
 
     waitKey(0);
     destroyAllWindows();
@@ -245,7 +259,72 @@ int RGBHistogramEqulization()
     namedWindow("Original - 原始图像", WINDOW_AUTOSIZE);
     imshow("Original - 原始图像", image);
     namedWindow("RGBHistogramEqulization", WINDOW_AUTOSIZE);
-    imshow("RGBHistogramEqulization", BGRhistequ_image);
+    imshow("RGBHistogramEqulization", BGRHistEquImg);
+
+    waitKey(0);
+    destroyAllWindows();
+
+    return 0;
+}
+
+int HSVHistogramEqulization()
+{
+    vector<Mat> HSVchannels;
+    split(hsv, HSVchannels);
+    Mat hChannel, sChannel, vChannel;
+    hChannel = HSVchannels.at(0);
+    sChannel = HSVchannels.at(1);
+    vChannel = HSVchannels.at(2);
+
+    int v_Hist[256];
+    memset(v_Hist, 0, 256 * sizeof(int));
+    int histHeight = 256;
+    int hMax, sMax, vMax;
+    int *h_pmax = &hMax, *s_pmax = &sMax, *v_pmax = &vMax;
+    Mat v_HistImg = Mat::zeros(histHeight, 256, CV_8UC3);
+
+    CalcNormalizedHistogram(vChannel, v_HistImg, histHeight, v_pmax, v_Hist, Scalar(255, 255, 255));
+
+    namedWindow("V channel", WINDOW_AUTOSIZE);
+    imshow("V channel", vChannel);
+    namedWindow("V channel Histogram", WINDOW_AUTOSIZE);
+    imshow("V channel Histogram", v_HistImg);
+
+    waitKey(0);
+
+    Mat v_HistEquImg = Mat::zeros(gray.size(), gray.type());
+    double v_table[256];
+    v_table[0] = (double)255 * v_Hist[0] / (double)(image.rows*image.cols);
+    for (int i = 1; i < 256; i++)
+    {
+        v_table[i] = ((double)255 * v_Hist[i] / (double)(image.rows*image.cols)) + v_table[i - 1];
+    }
+
+    for (int y = 0; y < image.rows; y++)
+    {
+        for (int x = 0; x < image.cols; x++)
+        {
+            v_HistEquImg.at<uchar>(y, x) = (int)v_table[vChannel.at<uchar>(y, x)];
+        }
+    }
+
+    HSVchannels.at(2) = v_HistEquImg;
+    Mat HSVHistEquImg;
+    merge(HSVchannels, HSVHistEquImg);
+    cvtColor(HSVHistEquImg, HSVHistEquImg, CV_HSV2BGR);
+
+    CalcNormalizedHistogram(v_HistEquImg, v_HistImg, histHeight, v_pmax, v_Hist, Scalar(255, 255, 255));
+
+    imshow("V channel", v_HistEquImg);
+    imshow("V channel Histogram", v_HistImg);
+
+    waitKey(0);
+    destroyAllWindows();
+
+    namedWindow("Original - 原始图像", WINDOW_AUTOSIZE);
+    imshow("Original - 原始图像", image);
+    namedWindow("HSVHistogramEqulization", WINDOW_AUTOSIZE);
+    imshow("HSVHistogramEqulization", HSVHistEquImg);
 
     waitKey(0);
     destroyAllWindows();

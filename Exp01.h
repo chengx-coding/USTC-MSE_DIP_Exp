@@ -17,5 +17,6 @@ int Binarization();
 int LogTrans();
 int GamaTrans();
 int ComplementaryColorTrans();
+int InvertColorTrans();
 
 int CapThreshold();
