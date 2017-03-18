@@ -15,5 +15,5 @@ int Exp02Main(char *imagePath);
 int CalcNormalizedHistogram(Mat img, Mat histImg, int histHeight, int *pmax, int *hist, Scalar color);
 int ShowNormalizedHistogram();
 int GrayHistogramEqualization();
-int RGBHistogramEqulization();
+int BGRHistogramEqulization();
 int HSVHistogramEqulization();

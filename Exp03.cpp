@@ -14,12 +14,11 @@ int Exp03Help()
         "2 : 利用高斯模板平滑灰度图像\n" <<
         "3 : 利用Laplacian、Robert、Sobel模板锐化灰度图像\n" <<
         "4 : 利用高提升滤波算法增强灰度图像\n" <<
-        "5 : 利用均值模板平滑彩色图像RBG通道\n" <<
-        "6 : 利用高斯模板平滑彩色图像RGB通道\n" <<
-        "7 : 利用Laplacian、Robert、Sobel模板锐化彩色图像RGB通道\n" << endl;
+        "5 : 利用均值模板平滑彩色图像BGR通道\n" <<
+        "6 : 利用高斯模板平滑彩色图像BGR通道\n" <<
+        "7 : 利用Laplacian、Robert、Sobel模板锐化彩色图像BGR通道\n" << endl;
     return 0;
 }
-
 
 extern Mat image;
 extern Mat gray;
@@ -61,14 +60,16 @@ int Exp03Main(char *imagePath)
                 SharpenFilterProcessing();
                 break;
             case '4':
+                HighboostFilterProcessing();
                 break;
             case '5':
-                RGBMeanFilterProcessing();
+                BGRMeanFilterProcessing();
                 break;
             case '6':
-                RGBGaussianFilterProcessing();
+                BGRGaussianFilterProcessing();
                 break;
             case '7':
+                BGRSharpenFilterProcessing();
                 break;
             case 'h':
                 Exp03Help();
@@ -138,7 +139,7 @@ int FilterProcessing(
     return 0;
 }
 
-int RGBFilterProcessing(
+int BGRFilterProcessing(
     Mat src, Mat dst, Mat filter, 
     Mat BGR_bChannel, Mat BGR_gChannel, Mat BGR_rChannel,
     double ProcessingMethod(Mat filterArea, Mat filter))
@@ -156,56 +157,21 @@ int RGBFilterProcessing(
         return 0;
     }
 
-    //Mat BGR_bChannel = Mat::zeros(bChannel.size(), bChannel.type());
-    //Mat BGR_gChannel = Mat::zeros(gChannel.size(), gChannel.type());
-    //Mat BGR_rChannel = Mat::zeros(rChannel.size(), rChannel.type());
-
     FilterProcessing(bChannel, BGR_bChannel, filter, ProcessingMethod);
     FilterProcessing(gChannel, BGR_gChannel, filter, ProcessingMethod);
     FilterProcessing(rChannel, BGR_rChannel, filter, ProcessingMethod);
-
-    //string bChannelTitle = "B channel:" + title;
-    //string gChannelTitle = "G channel:" + title;
-    //string rChannelTitle = "R channel:" + title;
-
-    //namedWindow("B channel", WINDOW_AUTOSIZE);
-    //imshow("B channel", bChannel);
-    //namedWindow(bChannelTitle, WINDOW_AUTOSIZE);
-    //imshow(bChannelTitle, BGR_bChannel);
-
-    //namedWindow("G channel", WINDOW_AUTOSIZE);
-    //imshow("G channel", gChannel);
-    //namedWindow(gChannelTitle, WINDOW_AUTOSIZE);
-    //imshow(gChannelTitle, BGR_gChannel);
-
-    //namedWindow("R channel", WINDOW_AUTOSIZE);
-    //imshow("R channel", rChannel);
-    //namedWindow(rChannelTitle, WINDOW_AUTOSIZE);
-    //imshow(rChannelTitle, BGR_rChannel);
-
-    //waitKey(0);
-    //destroyAllWindows();
 
     vector<Mat> BGRchannels_merge(3);
     BGRchannels_merge.at(0) = BGR_bChannel;
     BGRchannels_merge.at(1) = BGR_gChannel;
     BGRchannels_merge.at(2) = BGR_rChannel;
 
-    //Mat BGRFilterImg;
     merge(BGRchannels_merge, dst);
-
-    //namedWindow("原始图像", WINDOW_AUTOSIZE);
-    //namedWindow(title, WINDOW_AUTOSIZE);
-    //imshow("原始图像", src);
-    //imshow(title, BGRFilterImg);
-
-    //waitKey(0);
-    //destroyAllWindows();
 
     return 0;
 }
 
-int ShowRGBChannels(
+int ShowBGRChannels(
     Mat BGR_bChannel, Mat BGR_gChannel, Mat BGR_rChannel,
     string title)
 {
@@ -275,7 +241,7 @@ int MeanFilterProcessing()
     return 0;
 }
 
-int RGBMeanFilterProcessing()
+int BGRMeanFilterProcessing()
 {
     Mat meanFilter_3x3 = ((double)1 / 9)*Mat::ones(3, 3, CV_64F);//CV_64F对应double，若CV_32F对饮double会报错
     Mat meanFilter_5x5 = ((double)1 / 25)*Mat::ones(5, 5, CV_64F);
@@ -298,22 +264,22 @@ int RGBMeanFilterProcessing()
     Mat mean_gChannel_9x9 = Mat::zeros(gray.size(), gray.type());
     Mat mean_rChannel_9x9 = Mat::zeros(gray.size(), gray.type());
 
-    RGBFilterProcessing(
+    BGRFilterProcessing(
         image, meanFilterImg_3x3, meanFilter_3x3, 
         mean_bChannel_3x3, mean_gChannel_3x3, mean_rChannel_3x3,
         LinearFilterCalc);
-    RGBFilterProcessing(
+    BGRFilterProcessing(
         image, meanFilterImg_5x5, meanFilter_5x5,
         mean_bChannel_5x5, mean_gChannel_5x5, mean_rChannel_5x5,
         LinearFilterCalc);
-    RGBFilterProcessing(
+    BGRFilterProcessing(
         image, meanFilterImg_9x9, meanFilter_9x9,
         mean_bChannel_9x9, mean_gChannel_9x9, mean_rChannel_9x9,
         LinearFilterCalc);
 
-    ShowRGBChannels(mean_bChannel_3x3, mean_gChannel_3x3, mean_rChannel_3x3, "Mean Filter 3x3");
-    ShowRGBChannels(mean_bChannel_5x5, mean_gChannel_5x5, mean_rChannel_5x5, "Mean Filter 5x5");
-    ShowRGBChannels(mean_bChannel_9x9, mean_gChannel_9x9, mean_rChannel_9x9, "Mean Filter 9x9");
+    ShowBGRChannels(mean_bChannel_3x3, mean_gChannel_3x3, mean_rChannel_3x3, "Mean Filter 3x3");
+    ShowBGRChannels(mean_bChannel_5x5, mean_gChannel_5x5, mean_rChannel_5x5, "Mean Filter 5x5");
+    ShowBGRChannels(mean_bChannel_9x9, mean_gChannel_9x9, mean_rChannel_9x9, "Mean Filter 9x9");
 
     namedWindow("原始图像", WINDOW_AUTOSIZE);
     imshow("原始图像", image);
@@ -392,7 +358,7 @@ int GaussianFilterProcessing()
     return 0;
 }
 
-int RGBGaussianFilterProcessing()
+int BGRGaussianFilterProcessing()
 {
     Mat gaussianFilter_3x3 = Mat::zeros(3, 3, CV_64F);//CV_64F对应double，若CV_32F对应double会报错
     Mat gaussianFilter_5x5 = Mat::zeros(5, 5, CV_64F);
@@ -418,22 +384,22 @@ int RGBGaussianFilterProcessing()
     Mat gaussian_gChannel_9x9 = Mat::zeros(gray.size(), gray.type());
     Mat gaussian_rChannel_9x9 = Mat::zeros(gray.size(), gray.type());
 
-    RGBFilterProcessing(
+    BGRFilterProcessing(
         image, gaussianFilterImg_3x3, gaussianFilter_3x3,
         gaussian_bChannel_3x3, gaussian_gChannel_3x3, gaussian_rChannel_3x3,
         LinearFilterCalc);
-    RGBFilterProcessing(
+    BGRFilterProcessing(
         image, gaussianFilterImg_5x5, gaussianFilter_5x5,
         gaussian_bChannel_5x5, gaussian_gChannel_5x5, gaussian_rChannel_5x5,
         LinearFilterCalc);
-    RGBFilterProcessing(
+    BGRFilterProcessing(
         image, gaussianFilterImg_9x9, gaussianFilter_9x9,
         gaussian_bChannel_9x9, gaussian_gChannel_9x9, gaussian_rChannel_9x9,
         LinearFilterCalc);
 
-    ShowRGBChannels(gaussian_bChannel_3x3, gaussian_gChannel_3x3, gaussian_rChannel_3x3, "Gaussian Filter 3x3");
-    ShowRGBChannels(gaussian_bChannel_5x5, gaussian_gChannel_5x5, gaussian_rChannel_5x5, "Gaussian Filter 5x5");
-    ShowRGBChannels(gaussian_bChannel_9x9, gaussian_gChannel_9x9, gaussian_rChannel_9x9, "Gaussian Filter 9x9");
+    ShowBGRChannels(gaussian_bChannel_3x3, gaussian_gChannel_3x3, gaussian_rChannel_3x3, "Gaussian Filter 3x3");
+    ShowBGRChannels(gaussian_bChannel_5x5, gaussian_gChannel_5x5, gaussian_rChannel_5x5, "Gaussian Filter 5x5");
+    ShowBGRChannels(gaussian_bChannel_9x9, gaussian_gChannel_9x9, gaussian_rChannel_9x9, "Gaussian Filter 9x9");
 
     namedWindow("原始图像", WINDOW_AUTOSIZE);
     namedWindow("Mean Filter 3x3", WINDOW_AUTOSIZE);
@@ -524,8 +490,8 @@ int LaplacianSharpen(Mat src, Mat dst, string title, int filterNum)//dst是锐化后
     namedWindow(title + "Laplacian Sharpen Img" + filterTitle, WINDOW_AUTOSIZE);
     imshow(title + "Laplacian Sharpen Img" + filterTitle, dst);
 
-    namedWindow("Gray - 灰度图像", WINDOW_AUTOSIZE);
-    imshow("Gray - 灰度图像", gray);
+    namedWindow(title, WINDOW_AUTOSIZE);
+    imshow(title, src);
 
     waitKey(0);
     destroyAllWindows();
@@ -535,9 +501,51 @@ int LaplacianSharpen(Mat src, Mat dst, string title, int filterNum)//dst是锐化后
 
 int SharpenFilterProcessing()
 {
+    /*Laplacian*/
     Mat laplacianSharpenImg = Mat::zeros(gray.size(), gray.type());
-    LaplacianSharpen(gray, laplacianSharpenImg, "灰度图像：", 2);
+    LaplacianSharpen(gray, laplacianSharpenImg, "灰度图像 ", 2);
 
 
+    return 0;
+}
+int BGRSharpenFilterProcessing()
+{
+    vector<Mat> BGRchannels;
+    split(image, BGRchannels);
+    Mat bChannel, gChannel, rChannel;
+    bChannel = BGRchannels.at(0);
+    gChannel = BGRchannels.at(1);
+    rChannel = BGRchannels.at(2);
+
+    /*Laplacian*/
+    Mat laplacianSharpen_bChannel = Mat::zeros(gray.size(), gray.type());
+    Mat laplacianSharpen_gChannel = Mat::zeros(gray.size(), gray.type());
+    Mat laplacianSharpen_rChannel = Mat::zeros(gray.size(), gray.type());
+
+    LaplacianSharpen(bChannel, laplacianSharpen_bChannel, "B channel ", 2);
+    LaplacianSharpen(gChannel, laplacianSharpen_gChannel, "G channel ", 2);
+    LaplacianSharpen(rChannel, laplacianSharpen_rChannel, "R channel ", 2);
+
+    Mat laplacianSharpenImg = Mat::zeros(image.size(), image.type());
+    vector<Mat> BGRchannels_merge(3);
+    BGRchannels_merge.at(0) = laplacianSharpen_bChannel;
+    BGRchannels_merge.at(1) = laplacianSharpen_gChannel;
+    BGRchannels_merge.at(2) = laplacianSharpen_rChannel;
+    merge(BGRchannels_merge, laplacianSharpenImg);
+
+    namedWindow("Original - 原始图像", WINDOW_AUTOSIZE);
+    imshow("Original - 原始图像", image);
+    namedWindow("Laplacian Sharpen Img", WINDOW_AUTOSIZE);
+    imshow("Laplacian Sharpen Img", laplacianSharpenImg);
+    waitKey(0);
+    destroyAllWindows();
+
+
+    return 0;
+}
+
+int HighboostFilterProcessing()
+{
+    cout << "施工中..." << endl;
     return 0;
 }

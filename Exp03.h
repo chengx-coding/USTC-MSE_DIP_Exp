@@ -16,25 +16,28 @@ double LinearFilterCalc(Mat filterArea, Mat linearFilter);
 int FilterProcessing(
     Mat src, Mat dst, Mat filter, 
     double ProcessingMethod(Mat filterArea, Mat filter));
-int RGBFilterProcessing(
+int BGRFilterProcessing(
     Mat src, Mat BGRFilterImg, Mat filter,
     Mat BGR_bChannel, Mat BGR_gChannel, Mat BGR_rChannel,
     double ProcessingMethod(Mat filterArea, Mat filter));
 
-int ShowRGBChannels(
+int ShowBGRChannels(
     Mat BGR_bChannel, Mat BGR_gChannel, Mat BGR_rChannel,
     string title);
 
 int MeanFilterProcessing();
-int RGBMeanFilterProcessing();
+int BGRMeanFilterProcessing();
 
 int GaussianFilterGenerator(Mat gaussianFilter, int centerValue, double variance);
 int GaussianFilterProcessing();
-int RGBGaussianFilterProcessing();
+int BGRGaussianFilterProcessing();
 
 int SharpenFilterProcessing();
 
 int LaplacianFilterProcessing(Mat src, Mat dst, Mat laplacianFilter, Mat laplacianFilterImg, int c);
 int LaplacianSharpen(Mat src, Mat dst, string title, int filterNum);
+
+int HighboostFilterProcessing();
+int BGRSharpenFilterProcessing();
 
 

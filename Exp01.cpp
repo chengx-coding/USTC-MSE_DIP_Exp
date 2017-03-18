@@ -15,7 +15,6 @@ int Exp01Help()
     return 0;
 }
 
-
 extern Mat image;
 //IplImage *pimage;
 extern Mat gray;

@@ -9,11 +9,10 @@ int Exp02Help()
     cout <<
         "1 : 显示归一化直方图\n" <<
         "2 : 灰度图像直方图均衡处理\n" <<
-        "3 : RGB彩色图像三通道直方图均衡处理\n" << 
+        "3 : BGR彩色图像三通道直方图均衡处理\n" << 
         "4 : HSV彩色图像V通道直方图均衡处理\n" << endl;
     return 0;
 }
-
 
 extern Mat image;
 extern Mat gray;
@@ -52,7 +51,7 @@ int Exp02Main(char *imagePath)
                 GrayHistogramEqualization();
                 break;
             case '3':
-                RGBHistogramEqulization();
+                BGRHistogramEqulization();
                 break;
             case '4':
                 HSVHistogramEqulization();
@@ -171,7 +170,7 @@ int GrayHistogramEqualization()
     return 0;
 }
 
-int RGBHistogramEqulization()
+int BGRHistogramEqulization()
 {
     vector<Mat> BGRchannels;
     split(image, BGRchannels);
@@ -258,8 +257,8 @@ int RGBHistogramEqulization()
 
     namedWindow("Original - 原始图像", WINDOW_AUTOSIZE);
     imshow("Original - 原始图像", image);
-    namedWindow("RGBHistogramEqulization", WINDOW_AUTOSIZE);
-    imshow("RGBHistogramEqulization", BGRHistEquImg);
+    namedWindow("BGRHistogramEqulization", WINDOW_AUTOSIZE);
+    imshow("BGRHistogramEqulization", BGRHistEquImg);
 
     waitKey(0);
     destroyAllWindows();
