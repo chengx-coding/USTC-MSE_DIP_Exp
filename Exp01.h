@@ -13,10 +13,12 @@ int Exp01Help();
 int Exp01Main(char *imagePath);
 
 int ShowImg();
+int LinearTransProcessing(Mat src, Mat dst, int minValue, int maxValue);
+int LinearTrans();
 int Binarization();
 int LogTrans();
 int GamaTrans();
 int ComplementaryColorTrans();
-int InvertColorTrans();
+int HueInvertColorTrans();
 
 int CapThreshold();

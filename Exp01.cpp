@@ -6,11 +6,12 @@ int Exp01Help()
     cout <<
         "1 : 显示原始图像和灰度图像\n" <<
         "2 : 灰度图像二值化\n" <<
-        "3 : 灰度图像对数变换\n" <<
-        "4 : 灰度图像伽马变换\n" <<
-        "5 : 彩色图像反相变换\n" <<
+        "3 : 灰度图像线性变换\n" <<
+        "4 : 灰度图像对数变换\n" <<
+        "5 : 灰度图像伽马变换\n" <<
         "6 : 彩色图像补色变换\n" <<
-        "7 : 摄像头视频图像二值化\n" << endl;
+        "7 : 彩色图像色调取反变换\n" <<
+        "8 : 摄像头视频图像二值化\n" << endl;
     return 0;
 }
 
@@ -54,18 +55,21 @@ int Exp01Main(char *imagePath)
                 Binarization();
                 break;
             case '3':
-                LogTrans();
+                LinearTrans();
                 break;
             case '4':
-                GamaTrans();
+                LogTrans();
                 break;
             case '5':
-                InvertColorTrans();
+                GamaTrans();
                 break;
             case '6':
                 ComplementaryColorTrans();
                 break;
             case '7':
+                HueInvertColorTrans();
+                break;
+            case '8':
                 CapThreshold();
                 break;
             case 'h':
@@ -129,6 +133,71 @@ int Binarization()
             break;
         }
     }
+    return 0;
+}
+
+int LinearTransProcessing(Mat src, Mat dst, int minValue, int maxValue)
+{
+    double srcMin, srcMax;
+    minMaxLoc(src, &srcMin, &srcMax, 0, 0);
+
+    /*参数检查*/
+    if (dst.type() != CV_8U)
+    {
+        cout << "type error at LinearTrans" << endl;
+        return -1;
+    }
+    if (dst.size() != src.size())
+    {
+        cout << "size error at LinearTrans: dst.size() != src.size()" << endl;
+        return -2;
+    }
+    if (srcMin == srcMax)
+    {
+        dst = src.clone();
+        return 0;
+    }
+
+    if (src.type() == CV_8U)
+    {
+        for (int y = 0; y < src.rows; y++)
+        {
+            for (int x = 0; x < src.cols; x++)
+            {
+                dst.at<uchar>(y, x) = (double(src.at<uchar>(y, x)) - srcMin) / (srcMax - srcMin)*double(maxValue - minValue);
+            }
+        }
+    }
+    else if (src.type() == CV_64F)
+    {
+        for (int y = 0; y < src.rows; y++)
+        {
+            for (int x = 0; x < src.cols; x++)
+            {
+                dst.at<uchar>(y, x) = (src.at<double>(y, x) - srcMin) / (srcMax - srcMin)*double(maxValue - minValue);
+            }
+        }
+    }
+    else
+    {
+        cout << "type error at LinearTrans" << endl;
+        return -1;
+    }
+    return 0;
+}
+
+int LinearTrans()
+{
+    Mat linearImg = Mat::zeros(gray.size(), gray.type());
+    LinearTransProcessing(gray, linearImg, 128, 255);
+    
+    namedWindow("Gray - 灰度图像", WINDOW_AUTOSIZE);
+    imshow("Gray - 灰度图像", gray);
+    namedWindow("LinearTrans", WINDOW_AUTOSIZE);
+    imshow("LinearTrans", linearImg);
+    waitKey(0);
+    destroyAllWindows();
+
     return 0;
 }
 
@@ -196,29 +265,29 @@ int GamaTrans()
     return 0;
 }
 
-int InvertColorTrans()
+int ComplementaryColorTrans()
 {
-    Mat invertColorImg = Mat::zeros(image.size(), image.type());
+    Mat complementaryColorImg = Mat::zeros(image.size(), image.type());
     for (int y = 0; y < image.rows; y++) 
     {
         for (int x = 0; x < image.cols; x++)
         {
-            invertColorImg.at<Vec3b>(y, x)[0] = 255 - image.at<Vec3b>(y, x)[0];
-            invertColorImg.at<Vec3b>(y, x)[1] = 255 - image.at<Vec3b>(y, x)[1];
-            invertColorImg.at<Vec3b>(y, x)[2] = 255 - image.at<Vec3b>(y, x)[2];
+            complementaryColorImg.at<Vec3b>(y, x)[0] = 255 - image.at<Vec3b>(y, x)[0];
+            complementaryColorImg.at<Vec3b>(y, x)[1] = 255 - image.at<Vec3b>(y, x)[1];
+            complementaryColorImg.at<Vec3b>(y, x)[2] = 255 - image.at<Vec3b>(y, x)[2];
         }
     }
     namedWindow("Original - 原始图像", WINDOW_AUTOSIZE);
     imshow("Original - 原始图像", image);
-    namedWindow("Invert Color Trans", WINDOW_AUTOSIZE);
-    imshow("Invert Color Trans", invertColorImg);
+    namedWindow("Complementary Color Trans", WINDOW_AUTOSIZE);
+    imshow("Complementary Color Trans", complementaryColorImg);
     waitKey(0);
     destroyAllWindows();
 
     return 0;
 }
 
-int ComplementaryColorTrans()
+int HueInvertColorTrans()
 {
     vector<Mat> HSVchannels;
     split(hsv, HSVchannels);
@@ -241,24 +310,27 @@ int ComplementaryColorTrans()
     //imshow("Full Color Image", fullColorImage);
 
     /* LUT函数快速扫描赋值 */
-    Mat complementaryColorTable = Mat::zeros(1, 256, CV_8U);//这里必须是256，不然会报中断错误
-    uchar *p = complementaryColorTable.ptr();
-    for (int i = 0; i < 180; i++)
+    Mat hueInvertColorTable = Mat::zeros(1, 256, CV_8U);//这里必须是256，不然会报中断错误
+    uchar *p = hueInvertColorTable.ptr();
+    for (int i = 0; i < 90; i++)
     {
-        p[i] = 179 - i;
+        p[i] = i + 90;
     }
-    LUT(hChannel, complementaryColorTable, hChannel);
-    
+    for (int i = 90; i < 180; i++)
+    {
+        p[i] = i - 90;
+    }
+    LUT(hChannel, hueInvertColorTable, hChannel);    
     HSVchannels.at(0) = hChannel;
 
-    Mat complementaryColorImg;
-    merge(HSVchannels, complementaryColorImg);
-    cvtColor(complementaryColorImg, complementaryColorImg, CV_HSV2BGR);
+    Mat hueInvertColorImg;
+    merge(HSVchannels, hueInvertColorImg);
+    cvtColor(hueInvertColorImg, hueInvertColorImg, CV_HSV2BGR);
 
     namedWindow("Original - 原始图像", WINDOW_AUTOSIZE);
     imshow("Original - 原始图像", image);
-    namedWindow("Complementary Color Image", WINDOW_AUTOSIZE);
-    imshow("Complementary Color Image", complementaryColorImg);
+    namedWindow("Hue Invert Color Image", WINDOW_AUTOSIZE);
+    imshow("Hue Invert Color Image", hueInvertColorImg);
 
     waitKey(0);
     destroyAllWindows();
