@@ -402,14 +402,14 @@ int BGRGaussianFilterProcessing()
     ShowBGRChannels(gaussian_bChannel_9x9, gaussian_gChannel_9x9, gaussian_rChannel_9x9, "Gaussian Filter 9x9");
 
     namedWindow("原始图像", WINDOW_AUTOSIZE);
-    namedWindow("Mean Filter 3x3", WINDOW_AUTOSIZE);
-    namedWindow("Mean Filter 5x5", WINDOW_AUTOSIZE);
-    namedWindow("Mean Filter 5x5", WINDOW_AUTOSIZE);
+    namedWindow("Gaussian Filter 3x3", WINDOW_AUTOSIZE);
+    namedWindow("Gaussian Filter 5x5", WINDOW_AUTOSIZE);
+    namedWindow("Gaussian Filter 5x5", WINDOW_AUTOSIZE);
 
     imshow("原始图像", image);
-    imshow("gaussian Filter 3x3", gaussianFilterImg_3x3);
-    imshow("gaussian Filter 5x5", gaussianFilterImg_5x5);
-    imshow("gaussian Filter 9x9", gaussianFilterImg_9x9);
+    imshow("Gaussian Filter 3x3", gaussianFilterImg_3x3);
+    imshow("Gaussian Filter 5x5", gaussianFilterImg_5x5);
+    imshow("Gaussian Filter 9x9", gaussianFilterImg_9x9);
 
     waitKey(0);
     destroyAllWindows();
@@ -417,12 +417,12 @@ int BGRGaussianFilterProcessing()
     return 0;
 }
 
-int LaplacianFilterProcessing(Mat src, Mat dst, Mat laplacianFilter, Mat laplacianFilterImg, int c)
+int LaplacianFilterProcessing(Mat src, Mat dst, Mat laplacianFilter, Mat laplacianFilterImg, double c)//其实没必要多拆出来这一个函数
 {
 
     FilterProcessing(gray, laplacianFilterImg, laplacianFilter, LinearFilterCalc);    
         
-    //标定锐化结果方案1，直接saturate_cast<uchar>
+    //计算并标定锐化结果，直接saturate_cast<uchar>
     for (int y = 0; y < gray.rows; y++)
     {
         for (int x = 0; x < gray.cols; x++)
@@ -446,7 +446,7 @@ int LaplacianFilterProcessing(Mat src, Mat dst, Mat laplacianFilter, Mat laplaci
     return 0;
 }
 
-int LaplacianSharpen(Mat src, Mat dst, string title, int filterNum)//dst是锐化后的结果图像
+int LaplacianSharpen(Mat src, Mat dst, string title, double c, int filterNum)//dst是锐化后的结果图像
 {
     Mat laplacianFilter_n4 = (Mat_<double>(3, 3) <<
         0, 1, 0,
@@ -472,29 +472,109 @@ int LaplacianSharpen(Mat src, Mat dst, string title, int filterNum)//dst是锐化后
         break;
     }
 
-    Mat laplacianFilterImg_n4 = Mat::zeros(src.size(), CV_64F);
+    Mat laplacianFilterImg = Mat::zeros(src.size(), CV_64F);//滤波后得到的边缘图像
 
-    int c = -1;
+    LaplacianFilterProcessing(src, dst, laplacianFilter, laplacianFilterImg, c);
 
-    LaplacianFilterProcessing(src, dst, laplacianFilter_n4, laplacianFilterImg_n4, c);
-
-    /*标定Laplacian滤波结果*/
-    //LinearTransProcessing(laplacianFilterImg_n4, dst, 0, 255);//自己写的函数，不如自带的成员方法convertTo()好用
+    /*标定Laplacian滤波得到的边缘结果*/
+    //LinearTransProcessing(laplacianFilterImg, dst, 0, 255);//自己写的函数，不如自带的成员方法convertTo()好用
     double maxLap, minLap;
-    minMaxLoc(laplacianFilterImg_n4, &minLap, &maxLap, 0, 0);
-    laplacianFilterImg_n4.convertTo(laplacianFilterImg_n4, CV_8U, 255. / (maxLap - minLap), (-255.*minLap) / (maxLap - minLap));
+    minMaxLoc(laplacianFilterImg, &minLap, &maxLap, 0, 0);
+    laplacianFilterImg.convertTo(laplacianFilterImg, CV_8U, 255. / (maxLap - minLap), (-255.*minLap) / (maxLap - minLap));
 
-    namedWindow(title + "Laplacian Filter Img"+ filterTitle, WINDOW_AUTOSIZE);
-    imshow(title + "Laplacian Filter Img" + filterTitle, laplacianFilterImg_n4);
+    if (title.compare("") != 0)//标题不空则显示结果
+    {
+        namedWindow(title + "Laplacian Filter Img" + filterTitle, WINDOW_AUTOSIZE);
+        imshow(title + "Laplacian Filter Img" + filterTitle, laplacianFilterImg);
 
-    namedWindow(title + "Laplacian Sharpen Img" + filterTitle, WINDOW_AUTOSIZE);
-    imshow(title + "Laplacian Sharpen Img" + filterTitle, dst);
+        namedWindow(title + "Laplacian Sharpen Img" + filterTitle, WINDOW_AUTOSIZE);
+        imshow(title + "Laplacian Sharpen Img" + filterTitle, dst);
 
-    namedWindow(title, WINDOW_AUTOSIZE);
-    imshow(title, src);
+        namedWindow(title, WINDOW_AUTOSIZE);
+        imshow(title, src);
 
-    waitKey(0);
-    destroyAllWindows();
+        waitKey(0);
+        destroyAllWindows();
+    }
+
+    return 0;
+}
+
+int RobertSharpen(Mat src, Mat dst, string title, double c)
+{
+    Mat robertFilterImg = Mat::zeros(src.size(), CV_64F);//滤波后得到的边缘图像
+    for (int y = 0; y < src.rows - 1; y++)
+    {
+        for (int x = 0; x < src.cols - 1; x++)
+        {
+            robertFilterImg.at<double>(y, x) =
+                abs(src.at<uchar>(y + 1, x + 1) - src.at<uchar>(y, x)) + abs(src.at<uchar>(y + 1, x) - src.at<uchar>(y, x + 1));
+            dst.at <uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + c*robertFilterImg.at<double>(y, x));
+        }
+    }
+    /*标定Rober滤波得到的边缘结果*/
+    double maxRob, minRob;
+    minMaxLoc(robertFilterImg, &minRob, &maxRob, 0, 0);
+    robertFilterImg.convertTo(robertFilterImg, CV_8U, 255. / (maxRob - minRob), (-255.*minRob) / (maxRob - minRob));
+
+    if (title != "")//标题不空则显示结果
+    {
+        namedWindow(title + "Robert Filter Img", WINDOW_AUTOSIZE);
+        imshow(title + "Robert Filter Img", robertFilterImg);
+
+        namedWindow(title + "Robert Sharpen Img", WINDOW_AUTOSIZE);
+        imshow(title + "Robert Sharpen Img", dst);
+
+        namedWindow(title, WINDOW_AUTOSIZE);
+        imshow(title, src);
+
+        waitKey(0);
+        destroyAllWindows();
+    }
+
+    return 0;
+}
+
+int SobelSharpen(Mat src, Mat dst, string title, double c)
+{
+    Mat sobelFilterImg = Mat::zeros(src.size(), CV_64F);//滤波后得到的边缘图像
+    Mat filterArea;
+    Mat sobelFilter_x= (Mat_<double>(3, 3) <<
+        -1, 0, 1,
+        -2, 0, 2,
+        -1, 0, 1);
+    Mat sobelFilter_y = (Mat_<double>(3, 3) <<
+        -1, -2, -1,
+        0, 0, 0,
+        1, 2, 1);
+    for (int y = 1; y < src.rows - 1; y++)
+    {
+        for (int x = 1; x < src.cols - 1; x++)
+        {
+            filterArea = src(Range(y - 1, y + 1 + 1), Range(x - 1, x + 1 + 1));
+            sobelFilterImg.at<double>(y, x) = abs(LinearFilterCalc(filterArea, sobelFilter_x)) + abs(LinearFilterCalc(filterArea, sobelFilter_y));
+            dst.at <uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + c*sobelFilterImg.at<double>(y, x));
+        }
+    }
+    /*标定Sobel滤波得到的边缘结果*/
+    double maxSob, minSob;
+    minMaxLoc(sobelFilterImg, &minSob, &maxSob, 0, 0);
+    sobelFilterImg.convertTo(sobelFilterImg, CV_8U, 255. / (maxSob - minSob), (-255.*minSob) / (maxSob - minSob));
+
+    if (title != "")//标题不空则显示结果
+    {
+        namedWindow(title + "Sobel Filter Img", WINDOW_AUTOSIZE);
+        imshow(title + "Sobel Filter Img", sobelFilterImg);
+
+        namedWindow(title + "Sobel Sharpen Img", WINDOW_AUTOSIZE);
+        imshow(title + "Sobel Sharpen Img", dst);
+
+        namedWindow(title, WINDOW_AUTOSIZE);
+        imshow(title, src);
+
+        waitKey(0);
+        destroyAllWindows();
+    }
 
     return 0;
 }
@@ -502,12 +582,57 @@ int LaplacianSharpen(Mat src, Mat dst, string title, int filterNum)//dst是锐化后
 int SharpenFilterProcessing()
 {
     /*Laplacian*/
+    int lablacianFilterNum = 1;//1为中心为-4的laplacian模板，2为中心为-8的
+    double cLap = -1;
     Mat laplacianSharpenImg = Mat::zeros(gray.size(), gray.type());
-    LaplacianSharpen(gray, laplacianSharpenImg, "灰度图像 ", 2);
 
+    /*Robert*/
+    double cRob = 1;
+    Mat robertSharpenImg = Mat::zeros(gray.size(), gray.type());
+
+    /*Sobel*/
+    double cSob = 0.5;
+    Mat sobelSharpenImg = Mat::zeros(gray.size(), gray.type());
+
+    char choice;
+    while (1)
+    {
+        cout << 
+            "清选择锐化模板\n" <<
+            "1 Laplacian\n" <<
+            "2 Robert\n" <<
+            "3 Sobel\n" <<
+            "按w返回上一级，按q退出：";
+        cin >> choice;
+        if (choice == 'q')
+        {
+            exit(0);
+        }
+        else
+        {
+            switch (choice)
+            {
+            case '1':
+                LaplacianSharpen(gray, laplacianSharpenImg, "灰度图像 ", cLap, lablacianFilterNum);
+                break;
+            case '2':
+                RobertSharpen(gray, robertSharpenImg, "灰度图像 ", cRob);//系数取正会加强较亮的部分，系数取负会加强较暗的部分
+                break;
+            case '3':
+                SobelSharpen(gray, sobelSharpenImg, "灰度图像 ", cSob);//系数取正会加强较亮的部分，系数取负会加强较暗的部分
+                break;
+            case 'w':
+                return 0;
+            default:
+                cout << "无效的输入" << endl;
+                break;
+            }
+        }
+    }
 
     return 0;
 }
+
 int BGRSharpenFilterProcessing()
 {
     vector<Mat> BGRchannels;
@@ -517,28 +642,107 @@ int BGRSharpenFilterProcessing()
     gChannel = BGRchannels.at(1);
     rChannel = BGRchannels.at(2);
 
+    vector<Mat> BGRchannels_merge(3);
+
     /*Laplacian*/
+    int lablacianFilterNum = 1;//1为中心为-4的laplacian模板，2为中心为-8的
+    double cLap = -1;
     Mat laplacianSharpen_bChannel = Mat::zeros(gray.size(), gray.type());
     Mat laplacianSharpen_gChannel = Mat::zeros(gray.size(), gray.type());
     Mat laplacianSharpen_rChannel = Mat::zeros(gray.size(), gray.type());
-
-    LaplacianSharpen(bChannel, laplacianSharpen_bChannel, "B channel ", 2);
-    LaplacianSharpen(gChannel, laplacianSharpen_gChannel, "G channel ", 2);
-    LaplacianSharpen(rChannel, laplacianSharpen_rChannel, "R channel ", 2);
-
     Mat laplacianSharpenImg = Mat::zeros(image.size(), image.type());
-    vector<Mat> BGRchannels_merge(3);
-    BGRchannels_merge.at(0) = laplacianSharpen_bChannel;
-    BGRchannels_merge.at(1) = laplacianSharpen_gChannel;
-    BGRchannels_merge.at(2) = laplacianSharpen_rChannel;
-    merge(BGRchannels_merge, laplacianSharpenImg);
 
-    namedWindow("Original - 原始图像", WINDOW_AUTOSIZE);
-    imshow("Original - 原始图像", image);
-    namedWindow("Laplacian Sharpen Img", WINDOW_AUTOSIZE);
-    imshow("Laplacian Sharpen Img", laplacianSharpenImg);
-    waitKey(0);
-    destroyAllWindows();
+    /*Robert*/
+    double cRob = 1;
+    Mat robertSharpen_bChannel = Mat::zeros(gray.size(), gray.type());
+    Mat robertSharpen_gChannel = Mat::zeros(gray.size(), gray.type());
+    Mat robertSharpen_rChannel = Mat::zeros(gray.size(), gray.type());
+    Mat robertSharpenImg = Mat::zeros(image.size(), image.type());
+
+    /*Sobel*/
+    double cSob = 0.5;
+    Mat sobelSharpen_bChannel = Mat::zeros(gray.size(), gray.type());
+    Mat sobelSharpen_gChannel = Mat::zeros(gray.size(), gray.type());
+    Mat sobelSharpen_rChannel = Mat::zeros(gray.size(), gray.type());
+    Mat sobelSharpenImg = Mat::zeros(image.size(), image.type());
+
+    char choice;
+    while (1)
+    {
+        cout <<
+            "清选择锐化模板\n" <<
+            "1 Laplacian\n" <<
+            "2 Robert\n" <<
+            "3 Sobel\n" <<
+            "按w返回上一级，按q退出：";
+        cin >> choice;
+        if (choice == 'q')
+        {
+            exit(0);
+        }
+        else
+        {
+            switch (choice)
+            {
+            case '1':
+                LaplacianSharpen(bChannel, laplacianSharpen_bChannel, "B channel ", cLap, lablacianFilterNum);
+                LaplacianSharpen(gChannel, laplacianSharpen_gChannel, "G channel ", cLap, lablacianFilterNum);
+                LaplacianSharpen(rChannel, laplacianSharpen_rChannel, "R channel ", cLap, lablacianFilterNum);
+
+                BGRchannels_merge.at(0) = laplacianSharpen_bChannel;
+                BGRchannels_merge.at(1) = laplacianSharpen_gChannel;
+                BGRchannels_merge.at(2) = laplacianSharpen_rChannel;
+                merge(BGRchannels_merge, laplacianSharpenImg);
+
+                namedWindow("Original - 原始图像", WINDOW_AUTOSIZE);
+                imshow("Original - 原始图像", image);
+                namedWindow("Laplacian Sharpen Img", WINDOW_AUTOSIZE);
+                imshow("Laplacian Sharpen Img", laplacianSharpenImg);
+                waitKey(0);
+                destroyAllWindows();
+                break;
+            case '2':
+                RobertSharpen(bChannel, laplacianSharpen_bChannel, "B channel ", cRob);
+                RobertSharpen(gChannel, laplacianSharpen_gChannel, "G channel ", cRob);
+                RobertSharpen(rChannel, laplacianSharpen_rChannel, "R channel ", cRob);
+
+                BGRchannels_merge.at(0) = laplacianSharpen_bChannel;
+                BGRchannels_merge.at(1) = laplacianSharpen_gChannel;
+                BGRchannels_merge.at(2) = laplacianSharpen_rChannel;
+                merge(BGRchannels_merge, laplacianSharpenImg);
+
+                namedWindow("Original - 原始图像", WINDOW_AUTOSIZE);
+                imshow("Original - 原始图像", image);
+                namedWindow("Robert Sharpen Img", WINDOW_AUTOSIZE);
+                imshow("Robert Sharpen Img", laplacianSharpenImg);
+                waitKey(0);
+                destroyAllWindows();
+                break;
+            case '3':
+                SobelSharpen(bChannel, sobelSharpen_bChannel, "B channel ", cSob);
+                SobelSharpen(gChannel, sobelSharpen_gChannel, "G channel ", cSob);
+                SobelSharpen(rChannel, sobelSharpen_rChannel, "R channel ", cSob);
+
+                BGRchannels_merge.at(0) = sobelSharpen_bChannel;
+                BGRchannels_merge.at(1) = sobelSharpen_gChannel;
+                BGRchannels_merge.at(2) = sobelSharpen_rChannel;
+                merge(BGRchannels_merge, sobelSharpenImg);
+
+                namedWindow("Original - 原始图像", WINDOW_AUTOSIZE);
+                imshow("Original - 原始图像", image);
+                namedWindow("Sobel Sharpen Img", WINDOW_AUTOSIZE);
+                imshow("Sobel Sharpen Img", sobelSharpenImg);
+                waitKey(0);
+                destroyAllWindows();
+                break;
+            case 'w':
+                return 0;
+            default:
+                cout << "无效的输入" << endl;
+                break;
+            }
+        }
+    }
 
 
     return 0;

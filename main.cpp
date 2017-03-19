@@ -28,7 +28,7 @@ Mat hsv;
 int main(int argc, char** argv)
 {
     cout << "*** Using opencv-3.2.0-vc14 in Microsoft Visio Studio 2015 ***\n" << endl;
-    char *imagePath = "test.jpg";
+    char *imagePath = "moon.jpg";
     char choice;
     while (1)
     {

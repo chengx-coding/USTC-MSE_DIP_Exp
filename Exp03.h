@@ -34,8 +34,10 @@ int BGRGaussianFilterProcessing();
 
 int SharpenFilterProcessing();
 
-int LaplacianFilterProcessing(Mat src, Mat dst, Mat laplacianFilter, Mat laplacianFilterImg, int c);
-int LaplacianSharpen(Mat src, Mat dst, string title, int filterNum);
+int LaplacianFilterProcessing(Mat src, Mat dst, Mat laplacianFilter, Mat laplacianFilterImg, double c);
+int LaplacianSharpen(Mat src, Mat dst, string title, double c, int filterNum);
+int RobertSharpen(Mat src, Mat dst, string title, double c);
+int SobelSharpen(Mat src, Mat dst, string title, double c);
 
 int HighboostFilterProcessing();
 int BGRSharpenFilterProcessing();
