@@ -163,7 +163,8 @@ int LinearTransProcessing(Mat src, Mat dst, int minValue, int maxValue)
         {
             for (int x = 0; x < src.cols; x++)
             {
-                dst.at<uchar>(y, x) = (double(src.at<uchar>(y, x)) - srcMin) / (srcMax - srcMin)*double(maxValue - minValue);
+                dst.at<uchar>(y, x) =
+                    saturate_cast<uchar>(minValue + int((double(src.at<uchar>(y, x)) - srcMin) / (srcMax - srcMin)*double(maxValue - minValue) + 0.5));//int(double + 0.5)用来四舍五入
             }
         }
     }
@@ -173,7 +174,8 @@ int LinearTransProcessing(Mat src, Mat dst, int minValue, int maxValue)
         {
             for (int x = 0; x < src.cols; x++)
             {
-                dst.at<uchar>(y, x) = (src.at<double>(y, x) - srcMin) / (srcMax - srcMin)*double(maxValue - minValue);
+                dst.at<uchar>(y, x) =
+                    saturate_cast<uchar>(minValue + int((src.at<double>(y, x) - srcMin) / (srcMax - srcMin)*double(maxValue - minValue) + 0.5));
             }
         }
     }
@@ -188,14 +190,29 @@ int LinearTransProcessing(Mat src, Mat dst, int minValue, int maxValue)
 int LinearTrans()
 {
     Mat linearImg = Mat::zeros(gray.size(), gray.type());
-    LinearTransProcessing(gray, linearImg, 128, 255);
-    
+    int max = 255, min = 0;
+    int baseBias = 255;
+    int maxBias = baseBias, minBias = baseBias;
+
     namedWindow("Gray - 灰度图像", WINDOW_AUTOSIZE);
     imshow("Gray - 灰度图像", gray);
     namedWindow("LinearTrans", WINDOW_AUTOSIZE);
-    imshow("LinearTrans", linearImg);
-    waitKey(0);
-    destroyAllWindows();
+
+    createTrackbar("最大值", "LinearTrans", &max, 255);
+    createTrackbar("最小值", "LinearTrans", &min, 255);
+    createTrackbar("maxBias+baseBias", "LinearTrans", &maxBias, 2*baseBias);
+    createTrackbar("minBias+baseBias", "LinearTrans", &minBias, 2*baseBias);
+
+    for (;;)
+    {
+        LinearTransProcessing(gray, linearImg, min + minBias - baseBias, max + maxBias - baseBias);
+        imshow("LinearTrans", linearImg);
+        if (waitKey(10) != 255)
+        {
+            destroyAllWindows();
+            break;
+        }
+    }
 
     return 0;
 }

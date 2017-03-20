@@ -313,7 +313,7 @@ int GaussianFilterGenerator(Mat gaussianFilter, int centerValue, double variance
     {
         for (int x = 0; x < gaussianFilter.cols; x++)
         {
-            gaussianFilter.at<double>(y, x) = (int)(double(centerValue)*exp(-0.5*(double(pow((y - center), 2) + pow((x - center), 2))) / variance));
+            gaussianFilter.at<double>(y, x) = int((double(centerValue)*exp(-0.5*(double(pow((y - center), 2) + pow((x - center), 2))) / variance)) + 0.5);
             sum += (int)gaussianFilter.at<double>(y, x);
         }
     }
@@ -427,7 +427,7 @@ int LaplacianFilterProcessing(Mat src, Mat dst, Mat laplacianFilter, Mat laplaci
     {
         for (int x = 0; x < gray.cols; x++)
         {
-            dst.at<uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + c*int(laplacianFilterImg.at<double>(y, x)));
+            dst.at<uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + int(c*int(laplacianFilterImg.at<double>(y, x)) + 0.5));//int(double + 0.5)用来四舍五入
         }
     }
 
@@ -497,7 +497,7 @@ int RobertSharpen(Mat src, Mat dst, string title, double c)
         {
             robertFilterImg.at<double>(y, x) =
                 abs(src.at<uchar>(y + 1, x + 1) - src.at<uchar>(y, x)) + abs(src.at<uchar>(y + 1, x) - src.at<uchar>(y, x + 1));
-            dst.at <uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + c*robertFilterImg.at<double>(y, x));
+            dst.at <uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + int(c*robertFilterImg.at<double>(y, x) + 0.5));//int(double + 0.5)用来四舍五入
         }
     }
     /*标定Rober滤波得到的边缘结果*/
@@ -541,7 +541,7 @@ int SobelSharpen(Mat src, Mat dst, string title, double c)
         {
             filterArea = src(Range(y - 1, y + 1 + 1), Range(x - 1, x + 1 + 1));
             sobelFilterImg.at<double>(y, x) = abs(LinearFilterCalc(filterArea, sobelFilter_x)) + abs(LinearFilterCalc(filterArea, sobelFilter_y));
-            dst.at <uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + c*sobelFilterImg.at<double>(y, x));
+            dst.at <uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + int(c*sobelFilterImg.at<double>(y, x) + 0.5));//int(double + 0.5)用来四舍五入
         }
     }
     /*标定Sobel滤波得到的边缘结果*/
@@ -794,7 +794,8 @@ int HighboostFilterProcessing()
                 return 0;
             default:
                 cout << "无效的输入" << endl;
-                break;
+                continue;
+                //break;
             }
         }
 

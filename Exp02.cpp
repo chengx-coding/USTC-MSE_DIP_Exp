@@ -1,4 +1,5 @@
 #include "Exp02.h"
+#include "Exp01.h"
 
 using namespace cv;
 using namespace std;
@@ -74,6 +75,7 @@ int CalcNormalizedHistogram(Mat img, Mat histImg, int histHeight, int *pmax, int
 {
     //Mat lutTable = Mat::zeros(1, 256, CV_8U);
     //LUT(histImg, lutTable, histImg);
+    memset(hist, 0, 256 * sizeof(int));
     histImg = 0;
     int max = 0;
     for (int y = 0; y < img.rows; y++)
@@ -130,19 +132,26 @@ int GrayHistogramEqualization()
 
     Mat histEquImg = Mat::zeros(gray.size(), gray.type());
     double table[256];
-    table[0] = (double)255 * hist[0] / (double)(gray.rows*gray.cols);
+    table[0] = 255. * double(hist[0]) / (double)(gray.rows*gray.cols);
     for (int i = 1; i < 256; i++)
     {
-        table[i] = ((double)255 * hist[i] / (double)(gray.rows*gray.cols)) + table[i - 1];
+        table[i] = (255. * double(hist[i]) / (double)(gray.rows*gray.cols)) + table[i - 1];
     }
 
     for (int y = 0; y < gray.rows; y++)
     {
         for (int x = 0; x < gray.cols; x++)
         {
-            histEquImg.at<uchar>(y, x) = (int)table[gray.at<uchar>(y, x)];
+            histEquImg.at<uchar>(y, x) = saturate_cast<uchar>(int(table[gray.at<uchar>(y, x)] + 0.5));//int(double + 0.5)用来四舍五入
         }
     }
+
+    //normalize the histEquImg
+    double maxOrigin, minOrigin;
+    minMaxLoc(gray, &minOrigin, &maxOrigin, 0, 0);
+    LinearTransProcessing(histEquImg, histEquImg, (int)minOrigin, (int)maxOrigin);
+    //minMaxLoc(histEquImg, &minOrigin, &maxOrigin, 0, 0);
+    //histEquImg.convertTo(histEquImg, CV_8U, 255. / (maxOrigin - minOrigin), (-255.*minOrigin) / (maxOrigin - minOrigin));
 
     namedWindow("Gray - 灰度图像", WINDOW_AUTOSIZE);
     imshow("Gray - 灰度图像", gray);
@@ -161,7 +170,7 @@ int GrayHistogramEqualization()
     namedWindow("调用OpenCV直方图均衡化API得到的结果", WINDOW_AUTOSIZE);
     imshow("调用OpenCV直方图均衡化API得到的结果", cv_HistEquImg);
     Mat cv_HistImg = Mat::zeros(histHeight, 256, CV_8U);
-    CalcNormalizedHistogram(gray, cv_HistImg, histHeight, pmax, hist, Scalar(255));
+    CalcNormalizedHistogram(cv_HistEquImg, cv_HistImg, histHeight, pmax, hist, Scalar(255));
     namedWindow("调用OpenCV直方图均衡化API得到的结果的直方图", WINDOW_AUTOSIZE);
     imshow("调用OpenCV直方图均衡化API得到的结果的直方图", cv_HistImg);
 
@@ -214,25 +223,34 @@ int BGRHistogramEqulization()
     Mat g_HistEquImg = Mat::zeros(gray.size(), gray.type());
     Mat r_HistEquImg = Mat::zeros(gray.size(), gray.type());
     double b_table[256], g_table[256], r_table[256];
-    b_table[0] = (double)255 * b_Hist[0] / (double)(image.rows*image.cols);
-    g_table[0] = (double)255 * g_Hist[0] / (double)(image.rows*image.cols);
-    r_table[0] = (double)255 * r_Hist[0] / (double)(image.rows*image.cols);
+    b_table[0] = 255. * double(b_Hist[0]) / (double)(image.rows*image.cols);
+    g_table[0] = 255. * double(g_Hist[0]) / (double)(image.rows*image.cols);
+    r_table[0] = 255. * double(r_Hist[0]) / (double)(image.rows*image.cols);
     for (int i = 1; i < 256; i++)
     {
-        b_table[i] = ((double)255 * b_Hist[i] / (double)(image.rows*image.cols)) + b_table[i - 1];
-        g_table[i] = ((double)255 * g_Hist[i] / (double)(image.rows*image.cols)) + g_table[i - 1];
-        r_table[i] = ((double)255 * r_Hist[i] / (double)(image.rows*image.cols)) + r_table[i - 1];
+        b_table[i] = (255. * double(b_Hist[i]) / (double)(image.rows*image.cols)) + b_table[i - 1];
+        g_table[i] = (255. * double(g_Hist[i]) / (double)(image.rows*image.cols)) + g_table[i - 1];
+        r_table[i] = (255. * double(r_Hist[i]) / (double)(image.rows*image.cols)) + r_table[i - 1];
     }
 
     for (int y = 0; y < image.rows; y++)
     {
         for (int x = 0; x < image.cols; x++)
         {
-            b_HistEquImg.at<uchar>(y, x) = (int)b_table[bChannel.at<uchar>(y, x)];
-            g_HistEquImg.at<uchar>(y, x) = (int)g_table[gChannel.at<uchar>(y, x)];
-            r_HistEquImg.at<uchar>(y, x) = (int)r_table[rChannel.at<uchar>(y, x)];
+            b_HistEquImg.at<uchar>(y, x) = saturate_cast<uchar>(int(b_table[bChannel.at<uchar>(y, x)] + 0.5));
+            g_HistEquImg.at<uchar>(y, x) = saturate_cast<uchar>(int(g_table[gChannel.at<uchar>(y, x)] + 0.5));
+            r_HistEquImg.at<uchar>(y, x) = saturate_cast<uchar>(int(r_table[rChannel.at<uchar>(y, x)] + 0.5));
         }
     }
+
+    //normalize the histEquImg
+    double maxOrigin, minOrigin;
+    minMaxLoc(bChannel, &minOrigin, &maxOrigin, 0, 0);
+    LinearTransProcessing(b_HistEquImg, b_HistEquImg, (int)minOrigin, (int)maxOrigin);
+    minMaxLoc(gChannel, &minOrigin, &maxOrigin, 0, 0);
+    LinearTransProcessing(g_HistEquImg, g_HistEquImg, (int)minOrigin, (int)maxOrigin);
+    minMaxLoc(rChannel, &minOrigin, &maxOrigin, 0, 0);
+    LinearTransProcessing(r_HistEquImg, r_HistEquImg, (int)minOrigin, (int)maxOrigin);
 
     BGRchannels.at(0) = b_HistEquImg;
     BGRchannels.at(1) = g_HistEquImg;
@@ -293,19 +311,24 @@ int HSVHistogramEqulization()
 
     Mat v_HistEquImg = Mat::zeros(gray.size(), gray.type());
     double v_table[256];
-    v_table[0] = (double)255 * v_Hist[0] / (double)(image.rows*image.cols);
+    v_table[0] = 255. * double(v_Hist[0]) / (double)(image.rows*image.cols);
     for (int i = 1; i < 256; i++)
     {
-        v_table[i] = ((double)255 * v_Hist[i] / (double)(image.rows*image.cols)) + v_table[i - 1];
+        v_table[i] = (255. * double(v_Hist[i]) / (double)(image.rows*image.cols)) + v_table[i - 1];
     }
 
     for (int y = 0; y < image.rows; y++)
     {
         for (int x = 0; x < image.cols; x++)
         {
-            v_HistEquImg.at<uchar>(y, x) = (int)v_table[vChannel.at<uchar>(y, x)];
+            v_HistEquImg.at<uchar>(y, x) = saturate_cast<uchar>(int(v_table[vChannel.at<uchar>(y, x)] + 0.5));
         }
     }
+
+    //normalize the histEquImg
+    double maxOrigin, minOrigin;
+    minMaxLoc(vChannel, &minOrigin, &maxOrigin, 0, 0);
+    LinearTransProcessing(v_HistEquImg, v_HistEquImg, (int)minOrigin, (int)maxOrigin);
 
     HSVchannels.at(2) = v_HistEquImg;
     Mat HSVHistEquImg;
