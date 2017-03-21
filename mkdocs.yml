@@ -1,0 +1,10 @@
+site_name: MkDocs
+site_url: https://github.com/chengx-coding/chengx-coding.github.io.git
+site_description: Project documentation with Markdown.
+site_author: MkDocs Team
+#repo_url: 
+
+pages:
+- Home: index.md
+- Demos:
+  - Demo 1: helloworld.md
