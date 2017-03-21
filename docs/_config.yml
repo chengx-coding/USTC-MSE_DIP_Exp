@@ -1,4 +1,5 @@
-title: ChengX的GitHub博客
+title: ChengX的图像处理课程实验
 description: A coding coder...
 theme: jekyll-theme-cayman
-#theme: mkdocs
+
+permalink: helloworld.md
