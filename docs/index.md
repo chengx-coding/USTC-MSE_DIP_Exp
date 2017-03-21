@@ -11,7 +11,7 @@
 
 ### [实验五](https://chengx-coding.github.io/USTC-MSE_DIP_Exp/exp05)
 
-### [QT](https://chengx-coding.github.io/USTC-MSE_DIP_Exp/qt)
+### [Qt](https://chengx-coding.github.io/USTC-MSE_DIP_Exp/qt)
 
 
 
