@@ -29,8 +29,10 @@ _程序=搜索引擎+英文_ (ﾟДﾟ≡ﾟдﾟ)!?
 
 5. 《OpenCV3编程入门》  中文书，网上也可以找到，很多内容很方便，是官方文档的翻译外加一些作者的经验和例子。上面的资料都是英文版，这个是中文，看起来可能快一些。不过书里有个别地方有错误，这里是[源码和勘误](https://github.com/QianMo/OpenCV3-Intro-Book-Src)
 
+另外[数字图像处理标准图像集](https://github.com/chengx-coding/USTC-MSE_DIP_Exp/tree/master/standard_test_images)是从教材官网上下载的一组标准图像。我在实验中主要用lena的图像作为测试图像。
+
 ### 附：OpenCV 3.2.0 + VS 2015 开发环境搭建
 
-
+官网下载，按官网3.2.0文档配置...以后补充这部分...
 
 
