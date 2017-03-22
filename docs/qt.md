@@ -1,4 +1,4 @@
-# OpenCV + Qt的安装配置
+# OpenCV + Qt开发环境搭建
 
 版本： Windows 10 64bit + OpenCV 3.2.0 + Qt 5.8.0(Qt Creator 4.2.1) + CMake 3.8.0
 
