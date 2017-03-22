@@ -1,4 +1,4 @@
-## 图像处理课程实验
+## 数字图像处理课程实验
 
 
 ### [实验一](https://chengx-coding.github.io/USTC-MSE_DIP_Exp/exp01)
