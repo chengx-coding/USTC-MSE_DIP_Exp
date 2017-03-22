@@ -10,7 +10,7 @@ using namespace cv;
 using namespace std;
 
 int Exp02Help();
-int Exp02Main(char *imagePath);
+int Exp02Main(string imagePath);
 
 int CalcNormalizedHistogram(Mat img, Mat histImg, int histHeight, int *pmax, int *hist, Scalar color);
 int ShowNormalizedHistogram();

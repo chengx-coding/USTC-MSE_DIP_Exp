@@ -8,7 +8,7 @@
 
 下载的是集成了QT的QT Creator，一路默认安装。
 
-[CMake下载页面](https://cmake.org/download/)下载的cmake-3.8.0-rc2-win64-x64.msi，一路duangduangduang，
+[CMake下载页面](https://cmake.org/download/)下载的cmake-3.8.0-rc2-win64-x64.msi，一路duangduangduang，安装过程中设置Add PATH for all users
 
 ## Qt入门
 

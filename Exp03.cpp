@@ -23,7 +23,7 @@ int Exp03Help()
 extern Mat image;
 extern Mat gray;
 extern Mat hsv;
-int Exp03Main(char *imagePath)
+int Exp03Main(string imagePath)
 {
     image = imread(imagePath);
     //gray = imread(imagePath, IMREAD_GRAYSCALE);
@@ -42,6 +42,7 @@ int Exp03Main(char *imagePath)
     {
         cout << "清选择要运行的程序，按h帮助，按w返回上一级，按q退出：";
         cin >> choice;
+        cin.ignore(CHAR_MAX, '\n');
         if (choice == 'q')
         {
             exit(0);
@@ -298,7 +299,7 @@ int BGRMeanFilterProcessing()
     return 0;
 }
 
-int GaussianFilterGenerator(Mat gaussianFilter, int centerValue, double variance)
+int GaussianFilterGenerator(Mat gaussianFilter, double variance)
 {
     int filterSize = gaussianFilter.rows;
     if (filterSize % 2 != 1)
@@ -309,6 +310,8 @@ int GaussianFilterGenerator(Mat gaussianFilter, int centerValue, double variance
     //vector<int> center(2);
     int center = filterSize / 2;
     int sum = 0;
+    int centerValue;
+    centerValue = int((1. / exp(-0.5*(double(pow((0 - center), 2) + pow((0 - center), 2))) / variance)) + 0.5);
     for (int y = 0; y < gaussianFilter.rows; y++)
     {
         for (int x = 0; x < gaussianFilter.cols; x++)
@@ -330,9 +333,9 @@ int GaussianFilterProcessing()
     Mat gaussianFilter_5x5 = Mat::zeros(5, 5, CV_64F);
     Mat gaussianFilter_9x9 = Mat::zeros(9, 9, CV_64F);
 
-    GaussianFilterGenerator(gaussianFilter_3x3, 4, 1);
-    GaussianFilterGenerator(gaussianFilter_5x5, 25, 2);
-    GaussianFilterGenerator(gaussianFilter_9x9, 81, 3);
+    GaussianFilterGenerator(gaussianFilter_3x3, 0.72);//0.720 is square of 0.849
+    GaussianFilterGenerator(gaussianFilter_5x5, 1.92);
+    GaussianFilterGenerator(gaussianFilter_9x9, 2.8854);
 
     Mat gaussianImg_3x3 = Mat::zeros(gray.size(), gray.type());
     Mat gaussianImg_5x5 = Mat::zeros(gray.size(), gray.type());
@@ -364,9 +367,9 @@ int BGRGaussianFilterProcessing()
     Mat gaussianFilter_5x5 = Mat::zeros(5, 5, CV_64F);
     Mat gaussianFilter_9x9 = Mat::zeros(9, 9, CV_64F);
 
-    GaussianFilterGenerator(gaussianFilter_3x3, 4, 1);
-    GaussianFilterGenerator(gaussianFilter_5x5, 25, 2);
-    GaussianFilterGenerator(gaussianFilter_9x9, 81, 3);
+    GaussianFilterGenerator(gaussianFilter_3x3, 0.72);
+    GaussianFilterGenerator(gaussianFilter_5x5, 1.92);
+    GaussianFilterGenerator(gaussianFilter_9x9, 2.8854);
 
     Mat gaussianFilterImg_3x3 = Mat::zeros(image.size(), image.type());//这里一定要给三个结果对象分配内存空间，不然调用函数得到的结果无法保留
     Mat gaussianFilterImg_5x5 = Mat::zeros(image.size(), image.type());
@@ -746,9 +749,9 @@ int HighboostFilterProcessing()
     Mat gaussianFilter_3x3 = Mat::zeros(3, 3, CV_64F);//CV_64F对应double，若CV_32F对应double会报错
     Mat gaussianFilter_5x5 = Mat::zeros(5, 5, CV_64F);
     Mat gaussianFilter_9x9 = Mat::zeros(9, 9, CV_64F);
-    GaussianFilterGenerator(gaussianFilter_3x3, 4, 1);
-    GaussianFilterGenerator(gaussianFilter_5x5, 25, 2);
-    GaussianFilterGenerator(gaussianFilter_9x9, 81, 3);
+    GaussianFilterGenerator(gaussianFilter_3x3, 0.72);
+    GaussianFilterGenerator(gaussianFilter_5x5, 1.92);
+    GaussianFilterGenerator(gaussianFilter_9x9, 2.8854);
     Mat filter;
 
     char choice;

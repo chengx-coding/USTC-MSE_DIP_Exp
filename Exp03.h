@@ -10,7 +10,7 @@ using namespace cv;
 using namespace std;
 
 int Exp03Help();
-int Exp03Main(char *imagePath);
+int Exp03Main(string imagePath);
 
 double LinearFilterCalc(Mat filterArea, Mat linearFilter);
 int FilterProcessing(
@@ -28,7 +28,7 @@ int ShowBGRChannels(
 int MeanFilterProcessing();
 int BGRMeanFilterProcessing();
 
-int GaussianFilterGenerator(Mat gaussianFilter, int centerValue, double variance);
+int GaussianFilterGenerator(Mat gaussianFilter, double variance);
 int GaussianFilterProcessing();
 int BGRGaussianFilterProcessing();
 

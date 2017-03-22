@@ -10,7 +10,7 @@ using namespace cv;
 using namespace std;
 
 int Exp01Help();
-int Exp01Main(char *imagePath);
+int Exp01Main(string imagePath);
 
 int ShowImg();
 int LinearTransProcessing(Mat src, Mat dst, int minValue, int maxValue);

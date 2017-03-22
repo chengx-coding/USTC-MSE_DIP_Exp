@@ -18,7 +18,7 @@ int Exp02Help()
 extern Mat image;
 extern Mat gray;
 extern Mat hsv;
-int Exp02Main(char *imagePath)
+int Exp02Main(string imagePath)
 {
     image = imread(imagePath);
     //gray = imread(imagePath, IMREAD_GRAYSCALE);
@@ -37,6 +37,7 @@ int Exp02Main(char *imagePath)
     {
         cout << "清选择要运行的程序，按h帮助，按w返回上一级，按q退出：";
         cin >> choice;
+        cin.ignore(CHAR_MAX, '\n');
         if (choice == 'q')
         {
             exit(0);
