@@ -136,7 +136,12 @@ int GrayHistogramEqualization()
     table[0] = 255. * double(hist[0]) / (double)(gray.rows*gray.cols);
     for (int i = 1; i < 256; i++)
     {
-        table[i] = (255. * double(hist[i]) / (double)(gray.rows*gray.cols)) + table[i - 1];
+        table[i] = (255. * double(hist[i]) / double(gray.rows*gray.cols)) + table[i - 1];
+    }
+    //normalize the table
+    for (int i = 0; i < 256; i++)
+    {
+        table[i] = (255. * table[i] - table[0]) / (table[255] - table[0]);
     }
 
     for (int y = 0; y < gray.rows; y++)
@@ -148,9 +153,9 @@ int GrayHistogramEqualization()
     }
 
     //normalize the histEquImg
-    double maxOrigin, minOrigin;
-    minMaxLoc(gray, &minOrigin, &maxOrigin, 0, 0);
-    LinearTransProcessing(histEquImg, histEquImg, (int)minOrigin, (int)maxOrigin);
+    //double maxOrigin, minOrigin;
+    //minMaxLoc(gray, &minOrigin, &maxOrigin, 0, 0);
+    //LinearTransProcessing(histEquImg, histEquImg, (int)minOrigin, (int)maxOrigin);
     //minMaxLoc(histEquImg, &minOrigin, &maxOrigin, 0, 0);
     //histEquImg.convertTo(histEquImg, CV_8U, 255. / (maxOrigin - minOrigin), (-255.*minOrigin) / (maxOrigin - minOrigin));
 
