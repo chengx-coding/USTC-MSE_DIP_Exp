@@ -403,107 +403,107 @@ _包括完成的实验内容及每个实验的完成程度_
 	用原图像减去平滑后的图像得到边缘，然后再用得到的边缘增强原图像。平滑方法提供了上面的均值和高斯两种方法共六种模板来选择。
 
     ```C++
-int HighboostFilterProcessing()
-{
-    double k = 1.5;//k>1时为高提升滤波
+	int HighboostFilterProcessing()
+	{
+	    double k = 1.5;//k>1时为高提升滤波
 
-    Mat meanFilter_3x3 = ((double)1 / 9)*Mat::ones(3, 3, CV_64F);//CV_64F对应double，若CV_32F对饮double会报错
-    Mat meanFilter_5x5 = ((double)1 / 25)*Mat::ones(5, 5, CV_64F);
-    Mat meanFilter_9x9 = ((double)1 / 81)*Mat::ones(9, 9, CV_64F);
-    Mat gaussianFilter_3x3 = Mat::zeros(3, 3, CV_64F);//CV_64F对应double，若CV_32F对应double会报错
-    Mat gaussianFilter_5x5 = Mat::zeros(5, 5, CV_64F);
-    Mat gaussianFilter_9x9 = Mat::zeros(9, 9, CV_64F);
-    GaussianFilterGenerator(gaussianFilter_3x3, 0.72);
-    GaussianFilterGenerator(gaussianFilter_5x5, 1.92);
-    GaussianFilterGenerator(gaussianFilter_9x9, 2.8854);
-    Mat filter;
+	    Mat meanFilter_3x3 = ((double)1 / 9)*Mat::ones(3, 3, CV_64F);//CV_64F对应double，若CV_32F对饮double会报错
+	    Mat meanFilter_5x5 = ((double)1 / 25)*Mat::ones(5, 5, CV_64F);
+	    Mat meanFilter_9x9 = ((double)1 / 81)*Mat::ones(9, 9, CV_64F);
+	    Mat gaussianFilter_3x3 = Mat::zeros(3, 3, CV_64F);//CV_64F对应double，若CV_32F对应double会报错
+	    Mat gaussianFilter_5x5 = Mat::zeros(5, 5, CV_64F);
+	    Mat gaussianFilter_9x9 = Mat::zeros(9, 9, CV_64F);
+	    GaussianFilterGenerator(gaussianFilter_3x3, 0.72);
+	    GaussianFilterGenerator(gaussianFilter_5x5, 1.92);
+	    GaussianFilterGenerator(gaussianFilter_9x9, 2.8854);
+	    Mat filter;
 
-    char choice;
-    while (1)
-    {
-        cout <<
-            "清选择计算 unsharp mask 时所用的平滑滤波器\n" <<
-            "1 3x3 均值\n" <<
-            "2 5x5 均值\n" <<
-            "3 9x9 均值\n" <<
-            "4 3x3 高斯\n" <<
-            "5 5x5 高斯\n" <<
-            "6 9x9 高斯\n" <<
-            "按w返回上一级，按q退出：";
-        cin >> choice;
-        if (choice == 'q')
-        {
-            exit(0);
-        }
-        else
-        {
-            switch (choice)
-            {
-            case '1':
-                filter = meanFilter_3x3;
-                break;
-            case '2':
-                filter = meanFilter_5x5;
-                break;
-            case '3':
-                filter = meanFilter_9x9;
-                break;
-            case '4':
-                filter = gaussianFilter_3x3;
-                break;
-            case '5':
-                filter = gaussianFilter_5x5;
-                break;
-            case '6':
-                filter = gaussianFilter_9x9;
-                break;
-            case 'w':
-                return 0;
-            default:
-                cout << "无效的输入" << endl;
-                continue;
-                //break;
-            }
-        }
+	    char choice;
+	    while (1)
+	    {
+	        cout <<
+	            "清选择计算 unsharp mask 时所用的平滑滤波器\n" <<
+	            "1 3x3 均值\n" <<
+	            "2 5x5 均值\n" <<
+	            "3 9x9 均值\n" <<
+	            "4 3x3 高斯\n" <<
+	            "5 5x5 高斯\n" <<
+	            "6 9x9 高斯\n" <<
+	            "按w返回上一级，按q退出：";
+	        cin >> choice;
+	        if (choice == 'q')
+	        {
+	            exit(0);
+	        }
+	        else
+	        {
+	            switch (choice)
+	            {
+	            case '1':
+	                filter = meanFilter_3x3;
+	                break;
+	            case '2':
+	                filter = meanFilter_5x5;
+	                break;
+	            case '3':
+	                filter = meanFilter_9x9;
+	                break;
+	            case '4':
+	                filter = gaussianFilter_3x3;
+	                break;
+	            case '5':
+	                filter = gaussianFilter_5x5;
+	                break;
+	            case '6':
+	                filter = gaussianFilter_9x9;
+	                break;
+	            case 'w':
+	                return 0;
+	            default:
+	                cout << "无效的输入" << endl;
+	                continue;
+	                //break;
+	            }
+	        }
 
-        Mat highboostFilterImg = Mat::zeros(gray.size(), gray.type());
-        Mat unsharpMask= Mat::zeros(gray.size(), CV_64F);//非锐化掩蔽
-        Mat blurImg = Mat::zeros(gray.size(), gray.type());
+	        Mat highboostFilterImg = Mat::zeros(gray.size(), gray.type());
+	        Mat unsharpMask= Mat::zeros(gray.size(), CV_64F);//非锐化掩蔽
+	        Mat blurImg = Mat::zeros(gray.size(), gray.type());
 
-        FilterProcessing(gray, blurImg, filter, LinearFilterCalc);
+	        FilterProcessing(gray, blurImg, filter, LinearFilterCalc);
 
-        gray.convertTo(gray, CV_64F);
-        blurImg.convertTo(blurImg, CV_64F);
-        unsharpMask = gray - blurImg;
-        gray.convertTo(gray, CV_8U);
+	        gray.convertTo(gray, CV_64F);
+	        blurImg.convertTo(blurImg, CV_64F);
+	        unsharpMask = gray - blurImg;
+	        gray.convertTo(gray, CV_8U);
 
-        for (int y = 0; y < highboostFilterImg.rows; y++)
-        {
-            for (int x = 0; x < highboostFilterImg.cols; x++)
-            {
-                highboostFilterImg.at <uchar>(y, x) = saturate_cast<uchar>(gray.at<uchar>(y, x) + k*unsharpMask.at<double>(y, x));
-            }
-        }
+	        for (int y = 0; y < highboostFilterImg.rows; y++)
+	        {
+	            for (int x = 0; x < highboostFilterImg.cols; x++)
+	            {
+	                highboostFilterImg.at <uchar>(y, x) = saturate_cast<uchar>(gray.at<uchar>(y, x) + k*unsharpMask.at<double>(y, x));
+	            }
+	        }
 
-        //标定 scaling unsharp mask
-        double maxMast, minMast;
-        minMaxLoc(unsharpMask, &minMast, &maxMast, 0, 0);
-        unsharpMask.convertTo(unsharpMask, CV_8U, 255. / (maxMast - minMast), (-255.*minMast) / (maxMast - minMast));
+	        //标定 scaling unsharp mask
+	        double maxMast, minMast;
+	        minMaxLoc(unsharpMask, &minMast, &maxMast, 0, 0);
+	        unsharpMask.convertTo(unsharpMask, CV_8U, 255. / (maxMast - minMast), (-255.*minMast) / (maxMast - minMast));
 
-        namedWindow("Gray - 灰度图像", WINDOW_AUTOSIZE);
-        imshow("Gray - 灰度图像", gray);
-        namedWindow("Unsharp Mask with scaling", WINDOW_AUTOSIZE);
-        imshow("Unsharp Mask with scaling", unsharpMask);
-        namedWindow("Highboost Filter Img", WINDOW_AUTOSIZE);
-        imshow("Highboost Filter Img", highboostFilterImg);
+	        namedWindow("Gray - 灰度图像", WINDOW_AUTOSIZE);
+	        imshow("Gray - 灰度图像", gray);
+	        namedWindow("Unsharp Mask with scaling", WINDOW_AUTOSIZE);
+	        imshow("Unsharp Mask with scaling", unsharpMask);
+	        namedWindow("Highboost Filter Img", WINDOW_AUTOSIZE);
+	        imshow("Highboost Filter Img", highboostFilterImg);
 
-        waitKey(0);
-        destroyAllWindows();
+	        waitKey(0);
+	        destroyAllWindows();
 
-    }
+	    }
 
-    return 0;
-}
+	    return 0;
+	}
 
     
     ```
