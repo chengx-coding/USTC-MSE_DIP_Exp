@@ -7,6 +7,8 @@
 #include "Exp01.h"
 #include "Exp02.h"
 #include "Exp03.h"
+#include "Exp04.h"
+#include "Exp05.h"
 
 using namespace cv;
 using namespace std;
@@ -16,8 +18,10 @@ int Mainhelp()
     cout << "* Index *\n" << endl;
     cout <<
         "1 - »Ò¶È±ä»»\n" <<
-        "2 - Ö±·½Í¼¾ùºâ\n" << 
-        "3 - ¿ÕÓòÂË²¨\n" << endl;
+        "2 - Ö±·½Í¼¾ùºâ\n" <<
+        "3 - ¿ÕÓòÂË²¨\n" << 
+        "4 - Í¼ÏñÈ¥Ôë\n" << 
+        "5 - ÆµÓòÂË²¨\n" << endl;
     return 0;
 }
 
@@ -95,6 +99,12 @@ int main(int argc, char** argv)
                 break;
             case '3':
                 Exp03Main(imagePath);
+                break;
+            case '4':
+                Exp04Main(imagePath);
+                break;
+            case '5':
+                Exp05Main(imagePath);
                 break;
             case 'r':
                 imagePath = inputPath();

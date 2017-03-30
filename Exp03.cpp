@@ -117,7 +117,7 @@ int FilterProcessing(
             for (int x = padding; x < src_padding.cols - padding; x++)
             {
                 filterArea = src_padding(Range(y - padding, y + padding + 1), Range(x - padding, x + padding + 1));
-                dst.at<uchar>(y - padding, x - padding) = ProcessingMethod(filterArea, filter);
+                dst.at<uchar>(y - padding, x - padding) = int(ProcessingMethod(filterArea, filter) + 0.5);
             }
         }
     }

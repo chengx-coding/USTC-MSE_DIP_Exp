@@ -1,4 +1,5 @@
 #include "Exp01.h"
+#define M_SAVEFLAG 0
 
 int Exp01Help()
 {
@@ -92,15 +93,12 @@ int ShowImg()
     imshow("Original - Ô­Ê¼Í¼Ïñ", image);
     namedWindow("Gray - »Ò¶ÈÍ¼Ïñ", WINDOW_AUTOSIZE);
     imshow("Gray - »Ò¶ÈÍ¼Ïñ", gray);
+    if(M_SAVEFLAG)
+        imwrite("010101.jpg", gray);
 
     waitKey(0);
     destroyAllWindows();
     return 0;
-}
-
-void threshold_trackbar(int threshold_val, void *)
-{
-    setTrackbarPos("Threshold", "Binarization", threshold_val);
 }
 
 int Binarization()
@@ -133,6 +131,8 @@ int Binarization()
             break;
         }
     }
+    if (M_SAVEFLAG)
+        imwrite("010201.jpg", binaImg);
     return 0;
 }
 
