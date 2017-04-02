@@ -165,7 +165,7 @@ int LinearTransProcessing(Mat src, Mat dst, int minValue, int maxValue)
             for (int x = 0; x < src.cols; x++)
             {
                 dst.at<uchar>(y, x) =
-                    saturate_cast<uchar>(minValue + int((double(src.at<uchar>(y, x)) - srcMin) / (srcMax - srcMin)*double(maxValue - minValue) + 0.5));//int(double + 0.5)用来四舍五入
+                    saturate_cast<uchar>(minValue + cvRound((double(src.at<uchar>(y, x)) - srcMin) / (srcMax - srcMin)*double(maxValue - minValue)));//cvRound用来四舍六入五成双
             }
         }
     }
@@ -176,7 +176,7 @@ int LinearTransProcessing(Mat src, Mat dst, int minValue, int maxValue)
             for (int x = 0; x < src.cols; x++)
             {
                 dst.at<uchar>(y, x) =
-                    saturate_cast<uchar>(minValue + int((src.at<double>(y, x) - srcMin) / (srcMax - srcMin)*double(maxValue - minValue) + 0.5));
+                    saturate_cast<uchar>(minValue + cvRound((src.at<double>(y, x) - srcMin) / (srcMax - srcMin)*double(maxValue - minValue)));
             }
         }
     }

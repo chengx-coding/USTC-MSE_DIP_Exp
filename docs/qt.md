@@ -10,6 +10,9 @@
 
 [CMake下载页面](https://cmake.org/download/)下载的cmake-3.8.0-rc2-win64-x64.msi，一路duangduangduang，安装过程中设置Add PATH for all users
 
+无需cmake
+路径不要有中文
+
 ## Qt入门
 
 Qt Creator自带的教程就挺全了，从“欢迎”界面中的“Get Started Now”也能比较系统地了解一下Qt，挺详细的。

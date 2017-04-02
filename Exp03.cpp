@@ -117,7 +117,7 @@ int FilterProcessing(
             for (int x = padding; x < src_padding.cols - padding; x++)
             {
                 filterArea = src_padding(Range(y - padding, y + padding + 1), Range(x - padding, x + padding + 1));
-                dst.at<uchar>(y - padding, x - padding) = int(ProcessingMethod(filterArea, filter) + 0.5);
+                dst.at<uchar>(y - padding, x - padding) = cvRound(ProcessingMethod(filterArea, filter));
             }
         }
     }
@@ -311,12 +311,12 @@ int GaussianFilterGenerator(Mat gaussianFilter, double variance)
     int center = filterSize / 2;
     int sum = 0;
     int centerValue;
-    centerValue = int((1. / exp(-0.5*(double(pow((0 - center), 2) + pow((0 - center), 2))) / variance)) + 0.5);
+    centerValue = cvRound((1. / exp(-0.5*(double(pow((0 - center), 2) + pow((0 - center), 2))) / variance)));
     for (int y = 0; y < gaussianFilter.rows; y++)
     {
         for (int x = 0; x < gaussianFilter.cols; x++)
         {
-            gaussianFilter.at<double>(y, x) = int((double(centerValue)*exp(-0.5*(double(pow((y - center), 2) + pow((x - center), 2))) / variance)) + 0.5);
+            gaussianFilter.at<double>(y, x) = cvRound((double(centerValue)*exp(-0.5*(double(pow((y - center), 2) + pow((x - center), 2))) / variance)));
             sum += (int)gaussianFilter.at<double>(y, x);
         }
     }
@@ -430,7 +430,7 @@ int LaplacianFilterProcessing(Mat src, Mat dst, Mat laplacianFilter, Mat laplaci
     {
         for (int x = 0; x < gray.cols; x++)
         {
-            dst.at<uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + int(c*int(laplacianFilterImg.at<double>(y, x)) + 0.5));//int(double + 0.5)用来四舍五入
+            dst.at<uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + cvRound(c*laplacianFilterImg.at<double>(y, x)));
         }
     }
 
@@ -500,7 +500,7 @@ int RobertSharpen(Mat src, Mat dst, string title, double c)
         {
             robertFilterImg.at<double>(y, x) =
                 abs(src.at<uchar>(y + 1, x + 1) - src.at<uchar>(y, x)) + abs(src.at<uchar>(y + 1, x) - src.at<uchar>(y, x + 1));
-            dst.at <uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + int(c*robertFilterImg.at<double>(y, x) + 0.5));//int(double + 0.5)用来四舍五入
+            dst.at <uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + cvRound(c*robertFilterImg.at<double>(y, x)));
         }
     }
     /*标定Rober滤波得到的边缘结果*/
@@ -544,7 +544,7 @@ int SobelSharpen(Mat src, Mat dst, string title, double c)
         {
             filterArea = src(Range(y - 1, y + 1 + 1), Range(x - 1, x + 1 + 1));
             sobelFilterImg.at<double>(y, x) = abs(LinearFilterCalc(filterArea, sobelFilter_x)) + abs(LinearFilterCalc(filterArea, sobelFilter_y));
-            dst.at <uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + int(c*sobelFilterImg.at<double>(y, x) + 0.5));//int(double + 0.5)用来四舍五入
+            dst.at <uchar>(y, x) = saturate_cast<uchar>(src.at<uchar>(y, x) + cvRound(c*sobelFilterImg.at<double>(y, x)));
         }
     }
     /*标定Sobel滤波得到的边缘结果*/

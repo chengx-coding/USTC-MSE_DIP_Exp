@@ -57,6 +57,7 @@ int Exp04Main(string imagePath)
                 MeanFiltering();
                 break;
             case '2':
+                MedianFiltering();
                 break;
             case '3':
                 break;
@@ -198,6 +199,50 @@ int MeanFiltering()
 
     waitKey(0);
     destroyAllWindows();
+
+    return 0;
+}
+
+int MedianFiltering()
+{
+    //cout << cvRound(-0.5) << endl;
+    //cout << cvRound(-0.49) << endl;
+    //cout << cvRound(-0.51) << endl;
+
+    //cout << cvRound(0.5) << endl;
+    //cout << cvRound(0.49) << endl;
+    //cout << cvRound(0.51) << endl;
+
+    //cout << cvRound(-1.5) << endl;
+    //cout << cvRound(-1.49) << endl;
+    //cout << cvRound(-1.51) << endl;
+
+    //cout << cvRound(-2.5) << endl;
+    //cout << cvRound(-2.49) << endl;
+    //cout << cvRound(-2.51) << endl;
+
+    //cout << cvRound(2.5) << endl;
+    //cout << cvRound(2.49) << endl;
+    //cout << cvRound(2.51) << endl;
+
+    //cout << cvRound(3.5) << endl;
+    //cout << cvRound(3.49) << endl;
+    //cout << cvRound(3.51) << endl;
+    Mat bgr = image.clone();
+    Mat hsv;
+    for (int i = 0; i < 10000; i++)
+    {
+        cvtColor(bgr, hsv, CV_BGR2HSV);
+        cvtColor(hsv, bgr, CV_HSV2BGR);
+    }
+
+    namedWindow("bgr");
+    namedWindow("hsv");
+    imshow("bgr", image);
+    imshow("hsv", bgr);
+
+    waitKey(0);
+
 
     return 0;
 }

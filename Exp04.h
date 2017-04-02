@@ -15,3 +15,6 @@ int Exp04Main(string imagePath);
 int AddNoise(Mat img, int n, int type, double *pParam);
 
 int MeanFiltering();
+
+
+int MedianFiltering();

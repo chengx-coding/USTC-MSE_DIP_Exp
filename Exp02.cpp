@@ -148,7 +148,7 @@ int GrayHistogramEqualization()
     {
         for (int x = 0; x < gray.cols; x++)
         {
-            histEquImg.at<uchar>(y, x) = saturate_cast<uchar>(int(table[gray.at<uchar>(y, x)] + 0.5));//int(double + 0.5)用来四舍五入
+            histEquImg.at<uchar>(y, x) = saturate_cast<uchar>(cvRound(table[gray.at<uchar>(y, x)]));
         }
     }
 
@@ -243,9 +243,9 @@ int BGRHistogramEqulization()
     {
         for (int x = 0; x < image.cols; x++)
         {
-            b_HistEquImg.at<uchar>(y, x) = saturate_cast<uchar>(int(b_table[bChannel.at<uchar>(y, x)] + 0.5));
-            g_HistEquImg.at<uchar>(y, x) = saturate_cast<uchar>(int(g_table[gChannel.at<uchar>(y, x)] + 0.5));
-            r_HistEquImg.at<uchar>(y, x) = saturate_cast<uchar>(int(r_table[rChannel.at<uchar>(y, x)] + 0.5));
+            b_HistEquImg.at<uchar>(y, x) = saturate_cast<uchar>(cvRound(b_table[bChannel.at<uchar>(y, x)]));
+            g_HistEquImg.at<uchar>(y, x) = saturate_cast<uchar>(cvRound(g_table[gChannel.at<uchar>(y, x)]));
+            r_HistEquImg.at<uchar>(y, x) = saturate_cast<uchar>(cvRound(r_table[rChannel.at<uchar>(y, x)]));
         }
     }
 
@@ -327,7 +327,7 @@ int HSVHistogramEqulization()
     {
         for (int x = 0; x < image.cols; x++)
         {
-            v_HistEquImg.at<uchar>(y, x) = saturate_cast<uchar>(int(v_table[vChannel.at<uchar>(y, x)] + 0.5));
+            v_HistEquImg.at<uchar>(y, x) = saturate_cast<uchar>(cvRound(v_table[vChannel.at<uchar>(y, x)]));
         }
     }
 

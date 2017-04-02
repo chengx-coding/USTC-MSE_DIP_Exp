@@ -9,6 +9,7 @@
 #include "Exp03.h"
 #include "Exp04.h"
 #include "Exp05.h"
+#include "procs.h"
 
 using namespace cv;
 using namespace std;
@@ -19,9 +20,11 @@ int Mainhelp()
     cout <<
         "1 - »Ò¶È±ä»»\n" <<
         "2 - Ö±·½Í¼¾ùºâ\n" <<
-        "3 - ¿ÕÓòÂË²¨\n" << 
-        "4 - Í¼ÏñÈ¥Ôë\n" << 
-        "5 - ÆµÓòÂË²¨\n" << endl;
+        "3 - ¿ÕÓòÂË²¨\n" <<
+        "4 - Í¼ÏñÈ¥Ôë\n" <<
+        "5 - ÆµÓòÂË²¨\n" <<
+        "6 - ÆäËû³¢ÊÔ\n" << endl;
+
     return 0;
 }
 
@@ -105,6 +108,9 @@ int main(int argc, char** argv)
                 break;
             case '5':
                 Exp05Main(imagePath);
+                break;
+            case '6':
+                ProcsMain(imagePath);
                 break;
             case 'r':
                 imagePath = inputPath();
