@@ -12,6 +12,12 @@ using namespace std;
 int Exp05Help();
 int Exp05Main(string imagePath);
 
-int ShowDFT(Mat complexI);
-int DFTProcessing();
+int ShowSpectrum(Mat complexI, int centered);
+int DFTandIDFT();
+
+float IdealFilteringCalc(float d, float d0, int n);
+float ButterworthFilterCalc(float d, float d0, int n);
+int FrequencyDomainFiltering(float FilteringCalc(float d, float d0, int n), int filterType);
+
+
 
