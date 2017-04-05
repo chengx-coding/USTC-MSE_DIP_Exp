@@ -11,3 +11,7 @@ using namespace std;
 
 int Exp05Help();
 int Exp05Main(string imagePath);
+
+int ShowDFT(Mat complexI);
+int DFTProcessing();
+
