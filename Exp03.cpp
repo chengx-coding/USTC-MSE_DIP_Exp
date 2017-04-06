@@ -3,9 +3,6 @@
 
 #define M_PI 3.14159265358979323846
 
-using namespace cv;
-using namespace std;
-
 int Exp03Help()
 {
     cout << "\nExp03 --- SA16225037 ³ÌÐÀ\n" << endl;

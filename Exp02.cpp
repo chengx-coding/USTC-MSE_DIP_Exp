@@ -1,9 +1,6 @@
 #include "Exp02.h"
 #include "Exp01.h"
 
-using namespace cv;
-using namespace std;
-
 int Exp02Help()
 {
     cout << "\nExp02 --- SA16225037 ³ÌÐÀ\n" << endl;
