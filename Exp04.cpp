@@ -37,6 +37,7 @@ int Exp04Main(string imagePath)
         cout << "Could not open or find the image" << std::endl;
         return -1;
     }
+    Mat result = Mat::ones(gray.size(), gray.type());
 
     Exp04Help();
     char choice;
@@ -54,10 +55,10 @@ int Exp04Main(string imagePath)
             switch (choice)
             {
             case '1':
-                MeanFiltering();
+                MeanFiltering(gray, result);
                 break;
             case '2':
-                MedianFiltering();
+                MedianFiltering(gray, result);
                 break;
             case '3':
                 break;
@@ -122,88 +123,210 @@ int AddNoise(Mat img, int n, int type, double *pParam)//pParam[0] is the central
         default:
             break;
         }
-        if (img.type() == CV_8UC1)
+        if (type)
         {
-            img.at<uchar>(i, j) = c;
-        }
-        else if (img.type() == CV_8UC3)
-        {
-            img.at<Vec3b>(i, j)[0] = c;
-            img.at<Vec3b>(i, j)[1] = c;
-            img.at<Vec3b>(i, j)[2] = c;
-        }
-        else
-        {
-            cout << "image type error!" << endl;
-            return -1;
+            if (img.type() == CV_8UC1)
+            {
+                img.at<uchar>(i, j) = c;
+            }
+            else if (img.type() == CV_8UC3)
+            {
+                img.at<Vec3b>(i, j)[0] = c;
+                img.at<Vec3b>(i, j)[1] = c;
+                img.at<Vec3b>(i, j)[2] = c;
+            }
+            else
+            {
+                cout << "image type error!" << endl;
+                return -1;
+            }
         }
     }
     return 0;
 }
 
+double ArithmeticMeanFilterCalc(Mat filterArea, Mat Filter)
+{
+    double result = 0;
+    for (int y = 0; y < filterArea.rows; y++)
+    {
+        for (int x = 0; x < filterArea.cols; x++)
+        {
+            result += (double(filterArea.at<uchar>(y, x)));
+        }
+    }
+
+    return result / double(filterArea.total());
+}
+
 double GeometricMeanFilterCalc(Mat filterArea, Mat Filter)
 {
-    double result;
+    double result = 1;
+    for (int y = 0; y < filterArea.rows; y++)
+    {
+        for (int x = 0; x < filterArea.cols; x++)
+        {
+            result *= (double(filterArea.at<uchar>(y, x)));
+        }
+    }
 
-    return result;
+    return pow(result, 1. / double(filterArea.total()));
 }
 
 double HarmonicMeanFilterCalc(Mat filterArea, Mat Filter)
 {
-    double result;
+    double result = 0;
+    for (int y = 0; y < filterArea.rows; y++)
+    {
+        for (int x = 0; x < filterArea.cols; x++)
+        {
+            result += 1. / (double(filterArea.at<uchar>(y, x)));
+        }
+    }
 
-    return result;
+    return double(filterArea.total()) / result;
 }
 
 double ComtraharmonicMeanFilterCalc(Mat filterArea, Mat Filter)
 {
-    double result;
+    double result[2] = { 0, 0 };
+    int q = Filter.at<double>(0, 0);
+    for (int y = 0; y < filterArea.rows; y++)
+    {
+        for (int x = 0; x < filterArea.cols; x++)
+        {
+            result[0] += pow(double(filterArea.at<uchar>(y, x)), q + 1);
+            result[1] += pow(double(filterArea.at<uchar>(y, x)), q);
+        }
+    }
+
+    return result[0] / result[1];
+}
+
+
+double MedianFilterCalc(Mat filterArea, Mat Filter)
+{
+    double result = 0;
+    for (int y = 0; y < filterArea.rows; y++)
+    {
+        for (int x = 0; x < filterArea.cols; x++)
+        {
+            result += (double(filterArea.at<uchar>(y, x)));
+        }
+    }
 
     return result;
 }
 
-
-int medianFilterCalc(Mat filterArea, Mat Filter)
+int trackbarChange = 0;
+int noiseChange = 0;
+static void onTrackbar(int, void*)
 {
-    int result;
-
-    return result;
+    trackbarChange = 1;
+}
+static void onTrackbarNoise(int, void*)
+{
+    noiseChange = 1;
+    trackbarChange = 1;
 }
 
-int MeanFiltering()
+int MeanFiltering(Mat src, Mat dst)
 {
-    Mat MeanFilteringImg = Mat::ones(gray.size(), gray.type());
+    Mat MeanFilteringImg = Mat::zeros(src.size(), src.type());
     gray.copyTo(MeanFilteringImg);
-    //MeanFilteringImg *= 128;
+    Mat filter = Mat::zeros(5, 5, CV_64F);
+
     double gaussianParam[2];
     gaussianParam[0] = 128;
     gaussianParam[1] = 32;
-    //AddNoise(MeanFilteringImg, 30000, M_GAUSSIAN, gaussianParam);
-    AddNoise(MeanFilteringImg, MeanFilteringImg.cols*MeanFilteringImg.rows / 2, M_GAUSSIAN, gaussianParam);
-    //AddNoise(MeanFilteringImg, 10000, M_SALT, 0);
+    int noiseNum = 0;
+    int noiseType = 0;
+    int filterType = 0;
+    int q = 4;//Q=-1(q=4)时，为谐波滤波；Q=0(q=5)时，为算数均值滤波
 
-    namedWindow("MeanFiltering", WINDOW_AUTOSIZE);
-    imshow("MeanFiltering", MeanFilteringImg);
+    namedWindow("调节窗口", WINDOW_NORMAL);
+    createTrackbar("噪声数量", "调节窗口", &noiseNum, src.total(), onTrackbarNoise);
+    createTrackbar("噪声类型", "调节窗口", &noiseType, 4, onTrackbarNoise);
+    createTrackbar("滤波方式", "调节窗口", &filterType, 4, onTrackbar);
+    createTrackbar("逆谐波Q", "调节窗口", &q, 10, onTrackbar);
+    namedWindow("Noise Image", WINDOW_AUTOSIZE);
+    imshow("Noise Image", MeanFilteringImg);
+    namedWindow("Filtered Image", WINDOW_AUTOSIZE);
+    imshow("Filtered Image", dst);
+    for (;;)
+    {
+        if (noiseChange)
+        {
+            gray.copyTo(MeanFilteringImg);
+            AddNoise(MeanFilteringImg, noiseNum, noiseType, gaussianParam);
+            noiseChange = 0;
+            namedWindow("Noise Image", WINDOW_AUTOSIZE);
+            imshow("Noise Image", MeanFilteringImg);
+        }
+        if (trackbarChange)
+        {
+            switch (filterType)
+            {
+            case 1:
+                cout << "谐波均值滤波" << endl;
+                FilterProcessing(MeanFilteringImg, dst, filter, HarmonicMeanFilterCalc);
+                break;
+            case 2:
+                filter.at<double>(0, 0) = q - 5;
+                cout << "逆谐波均值滤波" << " Q=" << q - 5;
+                if (q - 5 == -1)
+                {
+                    cout << " 此时等价于谐波均值滤波" << endl;
+                }
+                else if (q - 5 == 0)
+                {
+                    cout << " 此时等价于算数均值滤波" << endl;
+                }
+                else
+                {
+                    cout << endl;
+                }
+                FilterProcessing(MeanFilteringImg, dst, filter, ComtraharmonicMeanFilterCalc);
+                break;
+            case 3:
+                cout << "算数均值滤波" << endl;
+                FilterProcessing(MeanFilteringImg, dst, filter, ArithmeticMeanFilterCalc);
+                break;
+            case 4:
+                cout << "几何均值滤波" << endl;
+                FilterProcessing(MeanFilteringImg, dst, filter, GeometricMeanFilterCalc);
+                break;
+            default:
+                break;
+            }
+            namedWindow("Filtered Image", WINDOW_AUTOSIZE);
+            imshow("Filtered Image", dst);
+            trackbarChange = 0;
+        }
 
-    int hist[256];
-    memset(hist, 0, 256 * sizeof(int));
-    int histHeight = 256;
-    int max;
-    int *pmax = &max;
-    Mat histImg = Mat::zeros(histHeight, 256, CV_8U);
+        if (waitKey(10) != 255)
+        {
+            destroyAllWindows();
+            break;
+        }
+    }
 
-    CalcNormalizedHistogram(MeanFilteringImg, histImg, histHeight, pmax, hist, Scalar(255));
+    //int hist[256];
+    //memset(hist, 0, 256 * sizeof(int));
+    //int histHeight = 256;
+    //int max;
+    //int *pmax = &max;
+    //Mat histImg = Mat::zeros(histHeight, 256, CV_8U);
+    //CalcNormalizedHistogram(MeanFilteringImg, histImg, histHeight, pmax, hist, Scalar(255));
+    //namedWindow("MeanFiltering hist", WINDOW_AUTOSIZE);
+    //imshow("MeanFiltering hist", histImg);
 
-    namedWindow("MeanFiltering hist", WINDOW_AUTOSIZE);
-    imshow("MeanFiltering hist", histImg);
-
-    waitKey(0);
-    destroyAllWindows();
-
+    //waitKey(0);
+    //destroyAllWindows();
     return 0;
 }
 
-int MedianFiltering()
+int MedianFiltering(Mat src, Mat dst)
 {
     //cout << cvRound(-0.5) << endl;
     //cout << cvRound(-0.49) << endl;
@@ -243,6 +366,19 @@ int MedianFiltering()
 
     waitKey(0);
 
+
+    return 0;
+}
+
+int AdaptiveMeanFiltering(Mat src, Mat dst)
+{
+    //cv::meanStdDev(img, mean, stddev);
+
+    return 0;
+}
+
+int AdaptiveMedianFiltering(Mat src, Mat dst)
+{
 
     return 0;
 }
