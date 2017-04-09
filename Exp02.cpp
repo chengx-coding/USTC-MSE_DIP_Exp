@@ -76,15 +76,20 @@ int CalcNormalizedHistogram(Mat img, Mat histImg, int histHeight, int *pmax, int
     memset(hist, 0, 256 * sizeof(int));
     histImg = 0;
     int max = 0;
+    int max_i = 0;
     for (int y = 0; y < img.rows; y++)
     {
         for (int x = 0; x < img.cols; x++)
         {
             hist[(int)img.at<uchar>(y, x)]++;
-            max = hist[(int)img.at<uchar>(y, x)] > max ? hist[(int)img.at<uchar>(y, x)] : max;
+            if (hist[(int)img.at<uchar>(y, x)] > max)
+            {
+                max = hist[(int)img.at<uchar>(y, x)];
+                max_i = img.at<uchar>(y, x);
+            }
         }
     }
-    *pmax = max;
+    *pmax = max_i;
     //minMaxLoc(img, &min, &max, 0, 0);
     int binValue;
     for (int i=0; i < 256; ++i)
