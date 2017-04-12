@@ -34,9 +34,11 @@ string inputPath()
     while (imagePath == "")
     {
         cout <<
+            "0 - ×Ô¶¨ÒåÍ¼Æ¬Â·¾¶\n" << 
             "1 - Ä¬ÈÏÍ¼Æ¬lena.tif\n" <<
-            "2 - Ä¬ÈÏÍ¼Æ¬moon.jpg\n" <<
-            "3 - ×Ô¶¨ÒåÍ¼Æ¬Â·¾¶\n" << endl;
+            "2 - Ä¬ÈÏÍ¼Æ¬moon.tif\n" << 
+            "3 - Ä¬ÈÏÍ¼Æ¬characters.tif\n" << 
+            "4 - Ä¬ÈÏÍ¼Æ¬ckt.tif\n" << endl;
         cout << "ÇëÑ¡Ôñ£º";
         char pathNum;
         cin >> pathNum;
@@ -47,9 +49,15 @@ string inputPath()
             imagePath = "lena.tif";
             break;
         case '2':
-            imagePath = "moon.jpg";
+            imagePath = "moon.tif";
             break;
         case '3':
+            imagePath = "characters.tif";
+            break;
+        case '4':
+            imagePath = "ckt.tif";
+            break;
+        case '0':
             cout << "ÇëÊäÈëÍ¼Æ¬Â·¾¶£º";
             cin >> imagePath;
             break;

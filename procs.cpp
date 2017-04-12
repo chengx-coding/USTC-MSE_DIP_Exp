@@ -6,7 +6,8 @@ int ProcsHelp()
 {
     cout << "\nProcs --- SA16225037 ³ÌÐÀ\n" << endl;
     cout <<
-        "1 : BGR to HSI & HSI to BGR\n" << endl;
+        "1 : BGR to HSI & HSI to BGR\n" << 
+        "2 : show difference\n" << endl;
     return 0;
 }
 
@@ -47,6 +48,7 @@ int ProcsMain(string imagePath)
                 test01();
                 break;
             case '2':
+                ShowDifference();
                 break;
             case '3':
                 break;
@@ -169,6 +171,11 @@ int ConvertHSI2BGR(Mat src, Mat dst)
             s = src_temp.at<Vec3d>(y, x)[1] / 255.;
             i = src_temp.at<Vec3d>(y, x)[2] / 255.;
 
+            if (i > (2. / 3.))
+            {
+                s = s > (2. / i - 2) ? 2. / i - 2 : s;
+            }
+
             if (h >= 0 && h < 2. / 3. * M_PI)
             {
                 b = i * (1 - s);
@@ -210,11 +217,11 @@ int test01()
     Mat imbgr = Mat::ones(image.size(), image.type());
     imbgr = image.clone();
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 10; i++)
     {
         ConvertBGR2HSI(imbgr, imhsi);
         ConvertHSI2BGR(imhsi, imbgr);
-        cout << i << endl;
+        //cout << i << endl;
     }
 
     namedWindow("test");
@@ -222,6 +229,124 @@ int test01()
 
     namedWindow("original");
     imshow("original", image);
+
+    vector<Mat> HSIchannels;
+    split(imhsi, HSIchannels);
+    Mat hChannel, sChannel, iChannel;
+    hChannel = HSIchannels.at(0);
+    sChannel = HSIchannels.at(1);
+    iChannel = HSIchannels.at(2);
+
+    imshow("I channel", iChannel);
+
+    vector<Mat> HSVchannels;
+    split(hsv, HSIchannels);
+    imshow("V channel", HSIchannels.at(2));
+
+    waitKey(0);
+    destroyAllWindows();
+    return 0;
+}
+
+int ShowDifference()
+{
+    Mat a = imread("0.tif", IMREAD_GRAYSCALE);
+    Mat b = imread("5.tif", IMREAD_GRAYSCALE);
+    Mat dst = Mat::zeros(b.size(), b.type());
+
+    Mat dst1 = Mat::zeros(b.size(), b.type());
+    Mat dst2 = Mat::zeros(b.size(), b.type());
+    Mat dst3 = Mat::zeros(b.size(), b.type());
+
+    imshow("a im", a);
+    imshow("b im", b);
+
+    cout << a(Rect(0, 0, 1, 1)) << endl;
+    cout << a(Rect(64, 64, 1, 1)) << endl;
+    cout << a(Rect(128, 128, 1, 1)) << endl;
+
+    Mat atemp, btemp, dsttemp;
+    a.convertTo(atemp, CV_32F);
+    b.convertTo(btemp, CV_32F);
+    dst.convertTo(dsttemp, CV_32F);
+
+    dst1.convertTo(dst1, CV_32F);
+    dst2.convertTo(dst2, CV_32F);
+    dst3.convertTo(dst3, CV_32F);
+
+
+    //dsttemp = atemp - btemp;
+    for (int y = 0; y < dst.rows; y++)
+    {
+        for (int x = 0; x < dst.cols; x++)
+        {
+            //dsttemp.at <float>(y, x) = b.at<uchar>(y, x) - a.at<uchar>(y, x);
+
+            dsttemp.at <float>(y, x) =
+                abs(b.at<uchar>(y, x) - a.at<uchar>(y, x)) < 1 ? 0 : b.at<uchar>(y, x) - a.at<uchar>(y, x);
+            
+            //dsttemp.at <float>(y, x) =
+            //    abs(b.at<uchar>(y, x) - a.at<uchar>(y, x)) < 1 ? 0 : b.at<uchar>(y, x);
+            if (a.at<uchar>(y, x) == 0)
+            {
+                dst1.at <float>(y, x) = b.at<uchar>(y, x) - a.at<uchar>(y, x);
+            }
+            if (a.at<uchar>(y, x) == 127)
+            {
+                dst2.at <float>(y, x) = b.at<uchar>(y, x) - a.at<uchar>(y, x);
+            }
+            if (a.at<uchar>(y, x) == 229)
+            {
+                dst3.at <float>(y, x) = b.at<uchar>(y, x) - a.at<uchar>(y, x);
+            }
+        }
+    }
+    //dsttemp(Rect(0, 0, 128, 128)) = 0;
+    double max, min;
+    minMaxLoc(dsttemp, &min, &max, 0, 0);
+    dsttemp.convertTo(dst, CV_8U, 255. / (max - min), (-255.*min) / (max - min));
+    //dsttemp.convertTo(dst, CV_8U, 1, -min);
+    cout << " max " << max << " min " << min << endl;
+    imshow("dif im", dst);
+
+
+    minMaxLoc(dst1, &min, &max, 0, 0);
+    dst1.convertTo(dst1, CV_8U, 1, -min);
+    cout << " max1 " << max << " min1 " << min << endl;
+    minMaxLoc(dst2, &min, &max, 0, 0);
+    dst2.convertTo(dst2, CV_8U, 1, -min);
+    cout << " max2 " << max << " min2 " << min << endl;
+    minMaxLoc(dst3, &min, &max, 0, 0);
+    dst3.convertTo(dst3, CV_8U, 1, -min);
+    cout << " max3 " << max << " min3 " << min << endl;
+
+
+    int hist[256];
+    memset(hist, 0, 256 * sizeof(int));
+    int histHeight = 256;
+    int maxh;
+    int *pmax = &maxh;
+    Mat histImg1 = Mat::zeros(histHeight, 256, CV_8U);
+    Mat histImg2 = Mat::zeros(histHeight, 256, CV_8U);
+    Mat histImg3 = Mat::zeros(histHeight, 256, CV_8U);
+
+    //Mat histImg(histHeight, 256, CV_8U, Scalar(0));
+
+    CalcNormalizedHistogram(dst, histImg1, histHeight, pmax, hist, Scalar(255));
+    imshow("dif hist", histImg1);
+    CalcNormalizedHistogram(a, histImg2, histHeight, pmax, hist, Scalar(255));
+    imshow("a", histImg2);
+    CalcNormalizedHistogram(b, histImg3, histHeight, pmax, hist, Scalar(255));
+    imshow("b", histImg3);
+
+    CalcNormalizedHistogram(dst1, histImg1, histHeight, pmax, hist, Scalar(255));
+    imshow("dst1", histImg1);
+    CalcNormalizedHistogram(dst2, histImg2, histHeight, pmax, hist, Scalar(255));
+    imshow("dst2", histImg2);
+    CalcNormalizedHistogram(dst3, histImg3, histHeight, pmax, hist, Scalar(255));
+    imshow("dst3", histImg3);
+
+
 
     waitKey(0);
     destroyAllWindows();

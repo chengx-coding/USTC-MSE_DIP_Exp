@@ -1,6 +1,7 @@
 #include "Exp04.h"
 #include "Exp03.h"
 #include "Exp02.h"
+#include "procs.h"
 
 #define M_SALT 1
 #define M_PEPPER 2
@@ -35,6 +36,7 @@ int Exp04Main(string imagePath)
         return -1;
     }
     Mat result = Mat::ones(gray.size(), gray.type());
+    Mat result_color = Mat::ones(image.size(), image.type());
 
     Exp04Help();
     char choice;
@@ -55,6 +57,7 @@ int Exp04Main(string imagePath)
                 NoiseFiltering(gray, result);
                 break;
             case '2':
+                NoiseFiltering(image, result_color);
                 break;
             case 'h':
                 Exp04Help();
@@ -320,9 +323,39 @@ static void onTrackbarFilter(int, void*)
 
 int NoiseFiltering(Mat src, Mat dst)
 {
-    Mat MeanFilteringImg = Mat::zeros(src.size(), src.type());
-    gray.copyTo(MeanFilteringImg);
+    Mat MeanFilteringImg = Mat::zeros(src.size(), gray.type());
+    //Mat MeanFilteringImgB, MeanFilteringImgG, MeanFilteringImgR;
+    Mat MeanFilteringColorImg, MeanFilteringColorImg_dst;
+
     Mat filter = Mat::zeros(3, 3, CV_64F);
+    vector<Mat> HSIchannels(3), HSIchannels_dst(3);
+    Mat hChannel, sChannel, iChannel;
+
+    if (src.type() == CV_8UC1)
+    {
+        src.copyTo(MeanFilteringImg);
+    }
+    else if (src.type() == CV_8UC3)
+    {
+        MeanFilteringColorImg = Mat::zeros(src.size(), src.type());
+        MeanFilteringColorImg_dst = Mat::zeros(src.size(), src.type());
+        ConvertBGR2HSI(src, MeanFilteringColorImg);
+        //cvtColor(src, MeanFilteringColorImg, CV_BGR2HSV);
+        split(MeanFilteringColorImg, HSIchannels);
+        hChannel = HSIchannels.at(0);
+        sChannel = HSIchannels.at(1);
+        iChannel = HSIchannels.at(2);
+        MeanFilteringImg = HSIchannels.at(2);
+        split(dst, HSIchannels_dst);
+        dst = HSIchannels_dst.at(2);
+        HSIchannels_dst.at(0) = hChannel;
+        HSIchannels_dst.at(1) = sChannel;
+    }
+    else
+    {
+        cout << "src type error!" << endl;
+        return -1;
+    }
 
     double gaussianParam[2];
     gaussianParam[0] = 0;
@@ -332,6 +365,7 @@ int NoiseFiltering(Mat src, Mat dst)
     int filterType = 0;
     int q = 4;//Q=-1(q=4)时，为谐波滤波；Q=0(q=5)时，为算数均值滤波
     int filterSize = 0;
+    int averageNoise = gaussianParam[0] + 255;
     int sigmaNoise = gaussianParam[1];
     Scalar mean, stddev;
     meanStdDev(MeanFilteringImg, mean, stddev);
@@ -345,15 +379,17 @@ int NoiseFiltering(Mat src, Mat dst)
 
     namedWindow("调节窗口", WINDOW_NORMAL);
     createTrackbar("滤波器大小", "调节窗口", &filterSize, 3, onTrackbarFilter);
-    createTrackbar("噪声数量", "调节窗口", &noiseNum, src.total(), onTrackbarNoise);
+    createTrackbar("噪声数量", "调节窗口", &noiseNum, MeanFilteringImg.total(), onTrackbarNoise);
     createTrackbar("噪声类型", "调节窗口", &noiseType, 4, onTrackbarNoise);
     createTrackbar("滤波方式", "调节窗口", &filterType, 7, onTrackbar);
     createTrackbar("逆谐波Q", "调节窗口", &q, 10, onTrackbar);
+    createTrackbar("高斯噪声均值", "调节窗口", &averageNoise, 510, onTrackbarNoise);
     createTrackbar("高斯噪声标准差", "调节窗口", &sigmaNoise, 128, onTrackbarNoise);
     namedWindow("Noise Image", WINDOW_AUTOSIZE);
-    imshow("Noise Image", MeanFilteringImg);
+    imshow("Noise Image", src);
     namedWindow("Filtered Image", WINDOW_AUTOSIZE);
     imshow("Filtered Image", dst);
+
     for (;;)
     {
         if (filterChange)
@@ -364,12 +400,30 @@ int NoiseFiltering(Mat src, Mat dst)
         }
         if (noiseChange)
         {
-            gray.copyTo(MeanFilteringImg);
-            gaussianParam[1] = sigmaNoise;
-            AddNoise(MeanFilteringImg, noiseNum, noiseType, gaussianParam);
-            noiseChange = 0;
             namedWindow("Noise Image", WINDOW_AUTOSIZE);
-            imshow("Noise Image", MeanFilteringImg);
+            if (src.type() == CV_8UC1)
+            {
+                src.copyTo(MeanFilteringImg);
+                gaussianParam[0] = averageNoise - 255;
+                gaussianParam[1] = sigmaNoise;
+                AddNoise(MeanFilteringImg, noiseNum, noiseType, gaussianParam);
+                imshow("Noise Image", MeanFilteringImg);
+            }
+            else if (src.type() == CV_8UC3)
+            {
+                //HSIchannels.at(2) = MeanFilteringImg;
+                MeanFilteringImg = iChannel.clone();
+                gaussianParam[0] = averageNoise - 255;
+                gaussianParam[1] = sigmaNoise;
+                AddNoise(MeanFilteringImg, noiseNum, noiseType, gaussianParam);
+                HSIchannels.at(2) = MeanFilteringImg;
+                merge(HSIchannels, MeanFilteringColorImg);
+                //cvtColor(MeanFilteringColorImg, MeanFilteringColorImg, CV_HSV2BGR);
+                ConvertHSI2BGR(MeanFilteringColorImg, MeanFilteringColorImg);
+                imshow("Noise Image", MeanFilteringColorImg);
+            }
+            noiseChange = 0;
+
         }
         if (trackbarChange)
         {
@@ -402,17 +456,14 @@ int NoiseFiltering(Mat src, Mat dst)
                 break;
             case 4:
                 cout << "自适应均值滤波" << endl;
-                //filter.at<double>(0, 0) = stddev.val[0];
-                //filter.at<double>(0, 0) = gaussianParam[1];
-                //filter.at<double>(0, 0) = 32;
                 FilterProcessing(MeanFilteringImg, dst, filter, StandardDeviationCalc);
                 imshow("Standard Deviation Img", dst);
                 CalcNormalizedHistogram(dst, histImg, histHeight, pmax_i, hist, Scalar(255));
                 imshow("StdImg Hist", histImg);
                 cout << "std peak position：" << max_i << endl;
 
-                sigmaNoise = max_i;
-                filter.at<double>(0, 0) = sigmaNoise;
+                //sigmaNoise = max_i;
+                filter.at<double>(0, 0) = max_i;
                 FilterProcessing(MeanFilteringImg, dst, filter, AdaptiveMeanFilterCalc);
 
                 break;
@@ -432,7 +483,19 @@ int NoiseFiltering(Mat src, Mat dst)
                 break;
             }
             namedWindow("Filtered Image", WINDOW_AUTOSIZE);
-            imshow("Filtered Image", dst);
+
+            if (src.type() == CV_8UC1)
+            {
+                imshow("Filtered Image", dst);
+            }
+            else if (src.type() == CV_8UC3)
+            {
+                //HSIchannels_dst.at(2) = dst;
+                merge(HSIchannels_dst, MeanFilteringColorImg_dst);
+                //cvtColor(MeanFilteringColorImg_dst, MeanFilteringColorImg_dst, CV_HSV2BGR);
+                ConvertHSI2BGR(MeanFilteringColorImg_dst, MeanFilteringColorImg_dst);
+                imshow("Filtered Image", MeanFilteringColorImg_dst);
+            }
             trackbarChange = 0;
         }
 
@@ -447,6 +510,11 @@ int NoiseFiltering(Mat src, Mat dst)
             destroyAllWindows();
             break;
         }
+    }
+
+    if (src.type() == CV_8UC3)
+    {
+        dst = MeanFilteringColorImg_dst;
     }
 
     //int hist[256];
