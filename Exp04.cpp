@@ -95,10 +95,16 @@ int AddNoise(Mat img, int n, int type, double *pParam)//pParam[0] is the central
     int i, j;
     int c = 0;
     double rand1, rand2;
-    for (int k = 0; k < n; k++)
+    Mat label = Mat::zeros(img.size(), CV_8U);
+    for (int k = 0; k < n && k < img.rows * img.cols; k++)
     {
         i = rand() % img.rows;
         j = rand() % img.cols;
+        while (label.at<uchar>(i, j) == 1)
+        {
+            i = rand() % img.rows;
+            j = rand() % img.cols;
+        }
         switch (type)
         {
         case M_SALT:
@@ -127,6 +133,7 @@ int AddNoise(Mat img, int n, int type, double *pParam)//pParam[0] is the central
             }
             rand2 = rand2 * 2 * M_PI;
             c = pParam[0] + (sqrt(rand1) * cos(rand2))*pParam[1];
+            //cout << c << endl;
             break;
         default:
             break;
@@ -139,9 +146,9 @@ int AddNoise(Mat img, int n, int type, double *pParam)//pParam[0] is the central
             }
             else if (img.type() == CV_8UC3)
             {
-                img.at<Vec3b>(i, j)[0] = saturate_cast<uchar>(img.at<uchar>(i, j) + c);
-                img.at<Vec3b>(i, j)[1] = saturate_cast<uchar>(img.at<uchar>(i, j) + c);
-                img.at<Vec3b>(i, j)[2] = saturate_cast<uchar>(img.at<uchar>(i, j) + c);
+                img.at<Vec3b>(i, j)[0] = saturate_cast<uchar>(img.at<Vec3b>(i, j)[0] + c);
+                img.at<Vec3b>(i, j)[1] = saturate_cast<uchar>(img.at<Vec3b>(i, j)[1] + c);
+                img.at<Vec3b>(i, j)[2] = saturate_cast<uchar>(img.at<Vec3b>(i, j)[2] + c);
             }
             else
             {
@@ -149,6 +156,7 @@ int AddNoise(Mat img, int n, int type, double *pParam)//pParam[0] is the central
                 return -1;
             }
         }
+        label.at<uchar>(i, j) = 1;
     }
     return 0;
 }
@@ -186,7 +194,6 @@ int AddNoise(Mat img, int n, int type, double *pParam)//pParam[0] is the central
 
 int mem_cmp(const void *a, const void *b)
 {
-    //当_Tp为浮点型，可能由于精度，会影响排序  
     return (*((int *)a) - *((int *)b));
 }
 //求Mat元素中值  
@@ -342,14 +349,13 @@ int NoiseFiltering(Mat src, Mat dst)
         ConvertBGR2HSI(src, MeanFilteringColorImg);
         //cvtColor(src, MeanFilteringColorImg, CV_BGR2HSV);
         split(MeanFilteringColorImg, HSIchannels);
-        hChannel = HSIchannels.at(0);
-        sChannel = HSIchannels.at(1);
         iChannel = HSIchannels.at(2);
         MeanFilteringImg = HSIchannels.at(2);
         split(dst, HSIchannels_dst);
         dst = HSIchannels_dst.at(2);
-        HSIchannels_dst.at(0) = hChannel;
-        HSIchannels_dst.at(1) = sChannel;
+        HSIchannels_dst.at(0) = HSIchannels.at(0);
+        HSIchannels_dst.at(1) = HSIchannels.at(1);
+        ConvertHSI2BGR(MeanFilteringColorImg, MeanFilteringColorImg);
     }
     else
     {
@@ -359,7 +365,7 @@ int NoiseFiltering(Mat src, Mat dst)
 
     double gaussianParam[2];
     gaussianParam[0] = 0;
-    gaussianParam[1] = 32;
+    gaussianParam[1] = 0;
     int noiseNum = 0;
     int noiseType = 0;
     int filterType = 0;
@@ -421,6 +427,17 @@ int NoiseFiltering(Mat src, Mat dst)
                 //cvtColor(MeanFilteringColorImg, MeanFilteringColorImg, CV_HSV2BGR);
                 ConvertHSI2BGR(MeanFilteringColorImg, MeanFilteringColorImg);
                 imshow("Noise Image", MeanFilteringColorImg);
+
+                //src.copyTo(MeanFilteringColorImg);
+                //gaussianParam[0] = averageNoise - 255;
+                //gaussianParam[1] = sigmaNoise;
+                //AddNoise(MeanFilteringColorImg, noiseNum, noiseType, gaussianParam);
+                //ConvertBGR2HSI(MeanFilteringColorImg, MeanFilteringColorImg);
+                //split(MeanFilteringColorImg, HSIchannels);
+                //MeanFilteringImg = HSIchannels.at(2);
+                //merge(HSIchannels, MeanFilteringColorImg);
+                //ConvertHSI2BGR(MeanFilteringColorImg, MeanFilteringColorImg);
+                //imshow("Noise Image", MeanFilteringColorImg);
             }
             noiseChange = 0;
 
@@ -517,18 +534,6 @@ int NoiseFiltering(Mat src, Mat dst)
         dst = MeanFilteringColorImg_dst;
     }
 
-    //int hist[256];
-    //memset(hist, 0, 256 * sizeof(int));
-    //int histHeight = 256;
-    //int max;
-    //int *pmax = &max;
-    //Mat histImg = Mat::zeros(histHeight, 256, CV_8U);
-    //CalcNormalizedHistogram(MeanFilteringImg, histImg, histHeight, pmax, hist, Scalar(255));
-    //namedWindow("MeanFiltering hist", WINDOW_AUTOSIZE);
-    //imshow("MeanFiltering hist", histImg);
-
-    //waitKey(0);
-    //destroyAllWindows();
     return 0;
 }
 
